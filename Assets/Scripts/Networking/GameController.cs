@@ -8,7 +8,7 @@ public class GameController : MonoBehaviour {
     public bool isServer;
     public Player player;
 
-    private const string SERVER_HOST = "127.0.0.1";//"10.23.22.92";
+    private const string SERVER_HOST = "10.17.48.182";//"10.23.22.92";
     private const int PORT = 5000;
     private Channel _channel;
     private List<ServerPlayer> _players;
@@ -19,7 +19,7 @@ public class GameController : MonoBehaviour {
             _players = new List<ServerPlayer>();
             _players.Add(Instantiate(playerPrefab, new Vector3(2f, 1.2f, 0f), Quaternion.identity).gameObject.GetComponent<ServerPlayer>());
         } else {
-            _channel = new Channel();
+			_channel = new Channel(PORT+1);
             _channel.AddConnection(SERVER_HOST, PORT);
         }
 	}
@@ -38,6 +38,7 @@ public class GameController : MonoBehaviour {
             }
         } else {
             byte[] bytes = _channel.getPacket();
+
             if (bytes != null) {
                 PositionInfo info = PositionInfo.fromBytes(bytes);
                 player.MakeMovement(info);   

@@ -9,16 +9,8 @@ using System.Net.Sockets;
 public class Channel{
 	
 	private UdpClient socket;
-	private Queue<byte[]> packets;
+	private Queue<Packet> packets;
 	private HashSet<IPEndPoint> connections;
-
-	public Channel(){
-		socket = new UdpClient ();
-		packets = new Queue<byte[]> ();
-		connections = new HashSet<IPEndPoint> ();
-		Thread t = new Thread (ListeningIncomingMessages);
-		t.Start ();
-	}
 	
 	public Channel(int port){
 		socket = new UdpClient (port);
@@ -34,16 +26,17 @@ public class Channel{
 
 	private void ListeningIncomingMessages(){
 		while (true) {
+			
 			IPEndPoint ip = new IPEndPoint(IPAddress.Any, 0);
 			byte[] b = socket.Receive (ref ip);
 			connections.Add (ip);
 			lock (packets) {
-				packets.Enqueue (b);
+				packets.Enqueue (new Packet(b, ip));
 			}
 		}
 	}
 
-	public byte[] getPacket(){
+	public Packet? getPacket(){
 		lock (packets) {
 			if (packets.Count == 0) {
 				return null;
