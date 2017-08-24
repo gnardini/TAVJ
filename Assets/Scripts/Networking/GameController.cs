@@ -26,7 +26,7 @@ public class GameController : MonoBehaviour {
 	
 	void Update () {
         if (isServer) {
-            byte[] bytes = _channel.getPacket();
+			byte[] bytes = _channel.getPacket ().getData ();
             while (bytes != null) {
                 PlayerInput input = PlayerInput.fromBytes(bytes);
                 _players[0].MoveTo(input.GetTargetPosition());
@@ -37,7 +37,7 @@ public class GameController : MonoBehaviour {
                 _channel.SendAll(info);
             }
         } else {
-            byte[] bytes = _channel.getPacket();
+			byte[] bytes = _channel.getPacket().getData();
 
             if (bytes != null) {
                 PositionInfo info = PositionInfo.fromBytes(bytes);

@@ -36,7 +36,7 @@ public class Channel{
 		}
 	}
 
-	public Packet? getPacket(){
+	public Packet getPacket(){
 		lock (packets) {
 			if (packets.Count == 0) {
 				return null;
