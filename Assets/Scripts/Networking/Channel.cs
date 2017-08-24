@@ -1,40 +1,68 @@
-﻿using System;
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using System.Threading;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
-using UnityEngine;
 
-public class Channel {
 
-    private UdpClient udpClient;
-    private IPEndPoint ipEndpoint;
+public class Channel{
+	
+	private UdpClient socket;
+	private Queue<byte[]> packets;
+	private HashSet<IPEndPoint> connections;
 
-    public Channel() {
-        udpClient = new UdpClient();
-    }
+	public Channel(){
+		socket = new UdpClient ();
+		packets = new Queue<byte[]> ();
+		connections = new HashSet<IPEndPoint> ();
+		Thread t = new Thread (ListeningIncomingMessages);
+		t.Start ();
+	}
+	
+	public Channel(int port){
+		socket = new UdpClient (port);
+		packets = new Queue<byte[]> ();
+		connections = new HashSet<IPEndPoint> ();
+		Thread t = new Thread (ListeningIncomingMessages);
+		t.Start ();
+	}
 
-    public Channel(int port) {
-        udpClient = new UdpClient(port);
-    }
+	private void ListeningIncomingMessages(){
+		while (true) {
+			IPEndPoint ip = new IPEndPoint(IPAddress.Any, 0);
+			byte[] b = socket.Receive (ref ip);
+			connections.Add (ip);
+			lock (packets) {
+				packets.Enqueue (b);
+			}
+		}
+	}
 
-    public void Connect(string host, int port) {
-        ipEndpoint = new IPEndPoint(IPAddress.Parse(host), port);
-    }
+	public byte[] getPacket(){
+		lock (packets) {
+			if (packets.Count == 0) {
+				return null;
+			} else {
+				return packets.Dequeue ();
+			}
+		}
+	}
 
-    public void Send(BitBuffer bitBuffer) {
-        byte[] data = bitBuffer.Read();
-        udpClient.Send(data, data.Length, ipEndpoint);
-    }
+	public void Send(byte[] data, IPEndPoint ip){
+		socket.Send(data, data.Length, ip);
+	}
 
-    public byte[] Read() {
-        IPEndPoint remoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
-        byte[] data = udpClient.Receive(ref remoteIpEndPoint);
-        Debug.Log("This message was sent from " +
-            remoteIpEndPoint.Address.ToString() +
-            " on their port number " +
-            remoteIpEndPoint.Port.ToString());
-        return data;
-    }
+	public void Send(Byteable data, IPEndPoint ip){
+		socket.Send(data.toBytes(), ip);
+	}
 
+	public void SendAll(byte[] data){
+		foreach(IPEndPoint ip in connections)
+			socket.Send(data, data.Length, ip);
+	}
+
+	public void SendAll(Byteable data){
+		SendAll (data.toBytes ());
+	}
 }
-
