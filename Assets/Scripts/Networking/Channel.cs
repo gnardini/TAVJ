@@ -28,6 +28,10 @@ public class Channel{
 		t.Start ();
 	}
 
+    public void AddConnection(string host, int port) {
+        connections.Add(new IPEndPoint(IPAddress.Parse(host), port));
+    }
+
 	private void ListeningIncomingMessages(){
 		while (true) {
 			IPEndPoint ip = new IPEndPoint(IPAddress.Any, 0);
@@ -54,7 +58,7 @@ public class Channel{
 	}
 
 	public void Send(Byteable data, IPEndPoint ip){
-		socket.Send(data.toBytes(), ip);
+        Send(data.toBytes(), ip);
 	}
 
 	public void SendAll(byte[] data){
@@ -63,6 +67,6 @@ public class Channel{
 	}
 
 	public void SendAll(Byteable data){
-		SendAll (data.toBytes ());
+		SendAll (data.toBytes());
 	}
 }

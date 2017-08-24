@@ -12,7 +12,7 @@ public class GoAndDieAbility : MonoBehaviour {
 
 	void Start () {
         _rigidbody = GetComponent<Rigidbody>();
-        _targetPosition = transform.position + Vector3.forward * range;
+        _targetPosition = transform.position + transform.forward * range;
 	}
 	
 	void Update () {

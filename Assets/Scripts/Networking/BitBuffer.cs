@@ -9,6 +9,10 @@ public class BitBuffer {
         queue = new Queue<byte>();
     }
 
+    public void WriteByte(byte b) {
+        queue.Enqueue(b);
+    }
+
     public void WriteFloat(float data) {
         byte[] float_data = BitConverter.GetBytes(data);
         foreach (byte b in float_data) {

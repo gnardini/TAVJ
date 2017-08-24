@@ -1,7 +1,7 @@
 ﻿using System;
 
-public interface Byteable
-{
+public interface Byteable {
+
 	byte[] toBytes();
 }
 

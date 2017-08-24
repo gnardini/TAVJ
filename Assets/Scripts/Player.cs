@@ -6,17 +6,17 @@ using UnityEngine;
 
 public class Player : MonoBehaviour {
 
+    public GameController gameController;
     public Transform targetPositionPrefab;
     public Transform autoAttackPrefab;
     public bool moveLocally;
     public float moveSpeed;
     public int autoAttackCooldown;
 
-    private Vector3 _targetPosition;
-    private GameObject _targetPositionSign;
-    private Rigidbody _rigidBody;
+    protected Vector3 _targetPosition;
+    protected GameObject _targetPositionSign;
+    protected Rigidbody _rigidBody;
 //    private float autoAttackCooldown;
-
 
 	void Start () {
         _targetPosition = transform.position;
@@ -26,43 +26,55 @@ public class Player : MonoBehaviour {
         _rigidBody = GetComponent<Rigidbody>();
     }
 
-    void Update () {
+    virtual protected void Update () {
         if (moveLocally) {
-            MakeMovement();
+            SendMovement();
             HandleAbilities();
+            FixPosition();
         }
     }
 
-    void MakeMovement() {
+    void FixPosition() {
+        transform.position = new Vector3(transform.position.x, 1.2f, transform.position.z);
+        transform.rotation = Quaternion.identity;
+        _rigidBody.velocity = Vector3.zero;
+        _rigidBody.angularVelocity = Vector3.zero;
+    }
+
+    public void MakeMovement(PositionInfo positionInfo) {
+        transform.position = positionInfo.GetPosition();
+        if ((_targetPosition - transform.position).magnitude < 0.1) {
+            _targetPositionSign.SetActive(false);
+        }
+    }
+
+    void SendMovement() {
         if (Input.GetMouseButton(1)) {
             RaycastHit hit;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out hit)) {
                 _targetPosition = hit.point;
-                // TODO: Improve this.
                 _targetPosition.y = transform.position.y;
+                gameController.SendByteable(new PlayerInput(InputType.MOVEMENT, _targetPosition));
                 _targetPositionSign.transform.position = 
                     new Vector3(_targetPosition.x, _targetPositionSign.transform.position.y, _targetPosition.z);
                 _targetPositionSign.SetActive(true);
             }
         }
-        if ((_targetPosition - transform.position).magnitude > 0.1) {
-            Vector3 movement = (_targetPosition - transform.position).normalized * moveSpeed * Time.deltaTime;
-            _rigidBody.MovePosition(transform.position + movement);
-        } else {
-            _targetPositionSign.SetActive(false);
-        }
     }
 	
     void HandleAbilities() {
         if (Input.GetKeyUp(KeyCode.Space)) {
-            Instantiate(autoAttackPrefab, transform.position + Vector3.forward * .5f, transform.rotation);
+            RaycastHit hit;
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out hit)) {
+                Vector3 targetPosition = hit.point;
+                targetPosition.y = transform.position.y;
+                Vector3 relativePosition = targetPosition - transform.position;
+                Quaternion rotation = Quaternion.LookRotation(relativePosition);
+                Instantiate(autoAttackPrefab, transform.position + 0.8f * relativePosition.normalized, rotation);
+            }
         }
     }
 
-    public void Write(BitBuffer bitBuffer) {
-        bitBuffer.WriteFloat(transform.position.x);
-        bitBuffer.WriteFloat(transform.position.y);
-        bitBuffer.WriteFloat(transform.position.z);   
-    }
 }
