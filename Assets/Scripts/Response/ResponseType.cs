@@ -5,6 +5,7 @@ using UnityEngine;
 public enum ResponseType {
 
     POSITIONS,
-    NEW_PLAYER
+    NEW_PLAYER,
+    AUTOATTACK
 
 }

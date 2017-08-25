@@ -30,7 +30,10 @@ public class MovementResponse : ServerResponse {
     }
 
     protected override byte[] ExtraBytes() {
-        return _positionInfo.toBytes();
+        BitBuffer bitBuffer = new BitBuffer();
+        bitBuffer.WriteByte((byte)_id);
+        bitBuffer.WriteBytes(_positionInfo.toBytes());
+        return bitBuffer.Read();
     }
 
     public override ResponseType GetResponseType() {

@@ -18,7 +18,7 @@ public class NewPlayerEvent : ServerResponse {
     }
 
     public static NewPlayerEvent FromBytes(byte[] data, int offset) {
-        return new NewPlayerEvent((int) data[0], data[1] == 1, PositionInfo.fromBytes(data, offset+2));
+        return new NewPlayerEvent((int) data[offset], data[offset+1] == 1, PositionInfo.fromBytes(data, offset+2));
     }
 
     public Vector3 GetPosition() {

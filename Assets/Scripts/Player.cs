@@ -5,8 +5,7 @@ using System.Net.Sockets;
 using UnityEngine;
 
 public class Player : MonoBehaviour {
-
-    public GameController gameController;
+    
     public Transform targetPositionPrefab;
     public Transform autoAttackPrefab;
     public float moveSpeed;
@@ -15,9 +14,10 @@ public class Player : MonoBehaviour {
     protected Vector3 _targetPosition;
     protected GameObject _targetPositionSign;
     protected Rigidbody _rigidBody;
+    public GameController _gameController;
     private int _id;
     private bool _moveLocally;
-//    private float autoAttackCooldown;
+    private float _autoAttackCooldownRemaining;
 
 	void Start () {
         _targetPosition = transform.position;
@@ -25,7 +25,6 @@ public class Player : MonoBehaviour {
         _targetPositionSign = Instantiate(targetPositionPrefab, startPosition, Quaternion.identity).gameObject;
         _targetPositionSign.SetActive(false);
         _rigidBody = GetComponent<Rigidbody>();
-        _moveLocally = false;
     }
 
     public void SetId(int id) {
@@ -36,12 +35,16 @@ public class Player : MonoBehaviour {
         _moveLocally = moveLocally;
     }
 
+    public void SetGameController(GameController gameController) {
+        _gameController = gameController;
+    }
+
     virtual protected void Update () {
         if (_moveLocally) {
             SendMovement();
-            HandleAbilities();
-            FixPosition();
+            SendAbilities();
         }
+        FixPosition();
     }
 
     void FixPosition() {
@@ -58,6 +61,12 @@ public class Player : MonoBehaviour {
         }
     }
 
+    public void SpawnAutoAttack(Vector3 targetPosition) {
+        Vector3 relativePosition = targetPosition - transform.position;
+        Quaternion rotation = Quaternion.LookRotation(relativePosition);
+        Instantiate(autoAttackPrefab, transform.position + 0.8f * relativePosition.normalized, rotation);
+    }
+
     void SendMovement() {
         if (Input.GetMouseButton(1)) {
             RaycastHit hit;
@@ -65,7 +74,7 @@ public class Player : MonoBehaviour {
             if (Physics.Raycast(ray, out hit)) {
                 _targetPosition = hit.point;
                 _targetPosition.y = transform.position.y;
-                gameController.SendByteable(new MovementInput(_id, new PositionInfo(_targetPosition)));
+                _gameController.SendByteable(new MovementInput(_id, new PositionInfo(_targetPosition)));
                 _targetPositionSign.transform.position = 
                     new Vector3(_targetPosition.x, _targetPositionSign.transform.position.y, _targetPosition.z);
                 _targetPositionSign.SetActive(true);
@@ -73,16 +82,16 @@ public class Player : MonoBehaviour {
         }
     }
 	
-    void HandleAbilities() {
-        if (Input.GetKeyUp(KeyCode.Space)) {
+    void SendAbilities() {
+        _autoAttackCooldownRemaining -= Time.deltaTime;
+        if (Input.GetKeyUp(KeyCode.Space) && _autoAttackCooldownRemaining <= float.Epsilon) {
             RaycastHit hit;
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(ray, out hit)) {
+                _autoAttackCooldownRemaining = autoAttackCooldown;
                 Vector3 targetPosition = hit.point;
                 targetPosition.y = transform.position.y;
-                Vector3 relativePosition = targetPosition - transform.position;
-                Quaternion rotation = Quaternion.LookRotation(relativePosition);
-                Instantiate(autoAttackPrefab, transform.position + 0.8f * relativePosition.normalized, rotation);
+                _gameController.SendByteable(new AutoAttackInput(_id, targetPosition));
             }
         }
     }

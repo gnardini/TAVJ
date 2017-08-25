@@ -11,22 +11,22 @@ public class Channel{
 	private UdpClient socket;
 	private Queue<Packet> packets;
 	private HashSet<IPEndPoint> connections;
+    private Thread _thread;
 	
 	public Channel(int port){
 		socket = new UdpClient (port);
 		packets = new Queue<Packet> ();
 		connections = new HashSet<IPEndPoint> ();
-		Thread t = new Thread (ListeningIncomingMessages);
-		t.Start ();
+        _thread = new Thread (new ThreadStart(ListeningIncomingMessages));
+        _thread.Start ();
 	}
 
     public void AddConnection(string host, int port) {
         connections.Add(new IPEndPoint(IPAddress.Parse(host), port));
     }
 
-	private void ListeningIncomingMessages(){
-		while (true) {
-			
+	private void ListeningIncomingMessages() {
+        while (true) {
 			IPEndPoint ip = new IPEndPoint(IPAddress.Any, 0);
 			byte[] b = socket.Receive (ref ip);
 			connections.Add (ip);
@@ -73,5 +73,10 @@ public class Channel{
 
     public void SendAllExcluding(Byteable data, IPEndPoint ip){
         SendAllExcluding (data.toBytes(), ip);
+    }
+
+    public void Destroy() {
+        _thread.Abort();
+        socket.Close();
     }
 }

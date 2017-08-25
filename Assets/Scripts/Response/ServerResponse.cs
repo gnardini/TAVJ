@@ -7,7 +7,9 @@ public abstract class ServerResponse : Byteable {
     public static ServerResponse fromBytes(byte[] bytes) {
         switch ((ResponseType) bytes[0]) {
         case ResponseType.POSITIONS:
-            return null;
+            return MovementResponse.FromBytes(bytes, 1);
+        case ResponseType.AUTOATTACK:
+            return AutoAttackResponse.FromBytes(bytes, 1);
         case ResponseType.NEW_PLAYER:
             return NewPlayerEvent.FromBytes(bytes, 1);
         }
