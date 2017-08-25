@@ -6,6 +6,7 @@ public enum ResponseType {
 
     POSITIONS,
     NEW_PLAYER,
-    AUTOATTACK
+    AUTOATTACK,
+	PLAYER_INFO_BROADCAST
 
 }

@@ -18,6 +18,7 @@ public class Channel{
 		packets = new Queue<Packet> ();
 		connections = new HashSet<IPEndPoint> ();
         _thread = new Thread (new ThreadStart(ListeningIncomingMessages));
+		_thread.IsBackground = true;
         _thread.Start ();
 	}
 
@@ -56,7 +57,7 @@ public class Channel{
 
 	public void SendAll(byte[] data){
 		foreach(IPEndPoint ip in connections)
-			socket.Send(data, data.Length, ip);
+			Send(data, ip);
 	}
 
 	public void SendAll(Byteable data){
@@ -66,7 +67,7 @@ public class Channel{
     public void SendAllExcluding(byte[] data, IPEndPoint ip){
         foreach (IPEndPoint connectedIp in connections) {
             if (!connectedIp.Equals(ip)) {
-                socket.Send(data, data.Length, ip);
+                Send(data, ip);
             }
         }
     }

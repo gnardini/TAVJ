@@ -12,7 +12,10 @@ public abstract class ServerResponse : Byteable {
             return AutoAttackResponse.FromBytes(bytes, 1);
         case ResponseType.NEW_PLAYER:
             return NewPlayerEvent.FromBytes(bytes, 1);
+		case ResponseType.PLAYER_INFO_BROADCAST:
+			return PlayerInfoBroadcast.FromBytes (bytes, 1);
         }
+
         return null;
     }
 

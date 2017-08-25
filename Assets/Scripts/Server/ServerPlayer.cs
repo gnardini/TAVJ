@@ -5,6 +5,7 @@ using UnityEngine;
 public class ServerPlayer : Player {
 
     override protected void Update() {
+		base.Update ();
         MakeMovement();
     }
 
