@@ -9,13 +9,14 @@ public class Player : MonoBehaviour {
     public GameController gameController;
     public Transform targetPositionPrefab;
     public Transform autoAttackPrefab;
-    public bool moveLocally;
     public float moveSpeed;
     public int autoAttackCooldown;
 
     protected Vector3 _targetPosition;
     protected GameObject _targetPositionSign;
     protected Rigidbody _rigidBody;
+    private int _id;
+    private bool _moveLocally;
 //    private float autoAttackCooldown;
 
 	void Start () {
@@ -24,10 +25,19 @@ public class Player : MonoBehaviour {
         _targetPositionSign = Instantiate(targetPositionPrefab, startPosition, Quaternion.identity).gameObject;
         _targetPositionSign.SetActive(false);
         _rigidBody = GetComponent<Rigidbody>();
+        _moveLocally = false;
+    }
+
+    public void SetId(int id) {
+        _id = id;
+    }
+
+    public void SetMoveLocally(bool moveLocally) {
+        _moveLocally = moveLocally;
     }
 
     virtual protected void Update () {
-        if (moveLocally) {
+        if (_moveLocally) {
             SendMovement();
             HandleAbilities();
             FixPosition();
@@ -41,8 +51,8 @@ public class Player : MonoBehaviour {
         _rigidBody.angularVelocity = Vector3.zero;
     }
 
-    public void MakeMovement(PositionInfo positionInfo) {
-        transform.position = positionInfo.GetPosition();
+    public void MakeMovement(Vector3 position) {
+        transform.position = position;
         if ((_targetPosition - transform.position).magnitude < 0.1) {
             _targetPositionSign.SetActive(false);
         }
@@ -55,7 +65,7 @@ public class Player : MonoBehaviour {
             if (Physics.Raycast(ray, out hit)) {
                 _targetPosition = hit.point;
                 _targetPosition.y = transform.position.y;
-                gameController.SendByteable(new PlayerInput(InputType.MOVEMENT, _targetPosition));
+                gameController.SendByteable(new MovementInput(_id, new PositionInfo(_targetPosition)));
                 _targetPositionSign.transform.position = 
                     new Vector3(_targetPosition.x, _targetPositionSign.transform.position.y, _targetPosition.z);
                 _targetPositionSign.SetActive(true);

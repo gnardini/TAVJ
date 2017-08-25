@@ -13,6 +13,12 @@ public class BitBuffer {
         queue.Enqueue(b);
     }
 
+    public void WriteBytes(byte[] bytes) {
+        foreach (byte b in bytes) {
+            queue.Enqueue(b);
+        }
+    }
+
     public void WriteFloat(float data) {
         byte[] float_data = BitConverter.GetBytes(data);
         foreach (byte b in float_data) {

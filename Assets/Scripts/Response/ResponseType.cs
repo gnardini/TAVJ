@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum InputType : byte {
+public enum ResponseType {
 
-	MOVEMENT,
-    AUTOATTACK
+    POSITIONS,
+    NEW_PLAYER
 
 }

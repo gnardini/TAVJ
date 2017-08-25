@@ -14,7 +14,7 @@ public class Channel{
 	
 	public Channel(int port){
 		socket = new UdpClient (port);
-		packets = new Queue<byte[]> ();
+		packets = new Queue<Packet> ();
 		connections = new HashSet<IPEndPoint> ();
 		Thread t = new Thread (ListeningIncomingMessages);
 		t.Start ();
@@ -62,4 +62,16 @@ public class Channel{
 	public void SendAll(Byteable data){
 		SendAll (data.toBytes());
 	}
+
+    public void SendAllExcluding(byte[] data, IPEndPoint ip){
+        foreach (IPEndPoint connectedIp in connections) {
+            if (!connectedIp.Equals(ip)) {
+                socket.Send(data, data.Length, ip);
+            }
+        }
+    }
+
+    public void SendAllExcluding(Byteable data, IPEndPoint ip){
+        SendAllExcluding (data.toBytes(), ip);
+    }
 }

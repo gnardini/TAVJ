@@ -14,10 +14,10 @@ public class PositionInfo : Byteable {
         return _position;
     }
 
-    public static PositionInfo fromBytes(byte[] bytes) {
-        float x = System.BitConverter.ToSingle(bytes, 0);
-        float y = System.BitConverter.ToSingle(bytes, 4);
-        float z = System.BitConverter.ToSingle(bytes, 8);
+    public static PositionInfo fromBytes(byte[] bytes, int offset=0) {
+        float x = System.BitConverter.ToSingle(bytes, offset);
+        float y = System.BitConverter.ToSingle(bytes, offset+4);
+        float z = System.BitConverter.ToSingle(bytes, offset+8);
         return new PositionInfo(new Vector3(x, y, z));
     }
 
