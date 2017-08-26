@@ -2,79 +2,78 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class GameController : MonoBehaviour {
 
-    public Transform clientPlayerPrefab;
-    public Transform serverPlayerPrefab;
+    public Transform playerPrefab;
     public Transform autoAttackPrefab;
     public bool isServer;
 
-    private const string SERVER_HOST = "192.168.0.18"; // "181.26.156.227";
+	private const string SERVER_HOST = "192.168.0.18";// "181.26.156.227";
     private const int PORT = 5500;
-    private Channel _channel;
-    private Dictionary<int, ServerPlayer> _players;
-    private Dictionary<int, Player> _clientPlayers;
+	private ReliableChannel _channel;
+	private Dictionary<int, Player> _players;
     private Dictionary<int, AutoAttack> _autoAttacks;
     private int _lastId = 0;
     private int _localId;
 
-	void Start () {
+    void Start () {
         if (isServer) {
-            _channel = new Channel(PORT);
-            _players = new Dictionary<int, ServerPlayer>();
+            _channel = new ReliableChannel(PORT);
+            _players = new Dictionary<int, Player>();
         } else {
-			_channel = new Channel(PORT+1);
+			_channel = new ReliableChannel(PORT+1);
             _channel.AddConnection(SERVER_HOST, PORT);
-            _clientPlayers = new Dictionary<int, Player>();
-            SendByteable(new GameStartInput());
+            _players = new Dictionary<int, Player>();
+            SendBroadcast(new GameStartInput());
         }
         _autoAttacks = new Dictionary<int, AutoAttack>();
-	}
-	
-	void Update () {
+    }
+
+    void Update () {
         if (isServer) {
-            Packet packet = _channel.getPacket();
+            Packet packet = _channel.GetPacket();
             while (packet != null) {
                 byte[] bytes = packet.getData ();
                 PlayerInput input = PlayerInput.fromBytes(bytes);
                 switch (input.GetInputType()) {
                 case InputType.MOVEMENT:
-                    _players[input.GetId()].MoveTo(((MovementInput)input).GetPosition());   
+					_players[input.GetId()].SetTargetPosition(((MovementInput)input).GetPosition());   
                     break;
                 case InputType.AUTOATTACK:
                     AutoAttackInput auto = (AutoAttackInput)input;
                     AutoAttack autoAttack = _players[auto.GetId()].SpawnAutoAttack(auto.GetTargetPosition());
                     _lastId++;
                     _autoAttacks.Add(_lastId, autoAttack);
-                    _channel.SendAll(new AutoAttackResponse(auto.GetId(), auto.GetTargetPosition()));
+                    _channel.SendAll(new AutoAttackResponse(auto.GetId(), auto.GetTargetPosition()), false);
                     break;
-				case InputType.START_GAME:
-					_lastId++;
-					Vector3 startPosition = new Vector3 (2f, 1.2f, 0f);
-					ServerPlayer serverPlayer = createServerPlayer(new PlayerInfo(_lastId, startPosition));
-					_players.Add (_lastId, serverPlayer);
-					_channel.Send (new PlayerInfoBroadcast (_lastId, _players), packet.getAddress());
-                    _channel.SendAllExcluding(new NewPlayerEvent(_lastId, startPosition), packet.getAddress());
+                case InputType.START_GAME:
+                    _lastId++;
+                    Vector3 startPosition = new Vector3 (2f, 1.2f, 0f);
+                    Player player = CreateServerPlayer(new PlayerInfo(_lastId, startPosition));
+                    _players.Add (_lastId, player);
+                    _channel.Send (new PlayerInfoBroadcast (_lastId, _players), packet.getAddress(), true);
+                    _channel.SendAllExcluding(new NewPlayerEvent(_lastId, startPosition), packet.getAddress(), true);
                     break;
                 }
-                packet = _channel.getPacket();
+                packet = _channel.GetPacket();
             }
-            foreach(KeyValuePair<int, ServerPlayer> playerInfo in _players) {
-                _channel.SendAll(new MovementResponse(playerInfo.Key, playerInfo.Value.transform.position));
+            foreach(KeyValuePair<int, Player> playerInfo in _players) {
+                _channel.SendAll(new MovementResponse(playerInfo.Key, playerInfo.Value.transform.position), false);
             }
             foreach(KeyValuePair<int, AutoAttack> autoInfo in _autoAttacks) {
-                _channel.SendAll(new MovementResponse(autoInfo.Key, autoInfo.Value.transform.position));
+                _channel.SendAll(new MovementResponse(autoInfo.Key, autoInfo.Value.transform.position), false);
             }
         } else {
-            Packet packet = _channel.getPacket();
+            Packet packet = _channel.GetPacket();
             while (packet != null) {
                 byte[] bytes = packet.getData();
                 ServerResponse response = ServerResponse.fromBytes(bytes);
                 switch (response.GetResponseType()) {
-				case ResponseType.POSITIONS: {
-						MovementResponse movementResponse = (MovementResponse)response;
-						if(_clientPlayers.ContainsKey(movementResponse.GetId ())){
-							_clientPlayers [movementResponse.GetId ()].MakeMovement (movementResponse.GetPosition ());
+                case ResponseType.POSITIONS: {
+                        MovementResponse movementResponse = (MovementResponse)response;
+                        if(_players.ContainsKey(movementResponse.GetId ())){
+							_players [movementResponse.GetId ()].SetTargetPosition(movementResponse.GetPosition ());
                         } else if (_autoAttacks.ContainsKey(movementResponse.GetId())) {
                             _autoAttacks[movementResponse.GetId()].MoveTo(movementResponse.GetPosition());
                         }
@@ -82,52 +81,54 @@ public class GameController : MonoBehaviour {
 					}
 				case ResponseType.AUTOATTACK: {
 						AutoAttackResponse auto = (AutoAttackResponse)response;
-						_clientPlayers [auto.GetId ()].SpawnAutoAttack (auto.GetPosition ());
+						_players [auto.GetId ()].SpawnAutoAttack (auto.GetPosition ());
 						break;
 					}
 				case ResponseType.NEW_PLAYER: {
 						NewPlayerEvent newPlayerEvent = (NewPlayerEvent)response;
 						PlayerInfo playerInfo = newPlayerEvent.GetPlayerInfo ();
-						Player player = createPlayer (playerInfo);
-						_clientPlayers.Add (playerInfo.GetId (), player);
+						Player player = CreatePlayer (playerInfo);
+						_players.Add (playerInfo.GetId (), player);
 						break;
 					}
 				case ResponseType.PLAYER_INFO_BROADCAST: { 
 						PlayerInfoBroadcast playerInfoBroadcast = (PlayerInfoBroadcast)response;
 						_localId = playerInfoBroadcast.GetId ();
 						foreach (PlayerInfo playerInfo in playerInfoBroadcast.getPlayersInfo()) {
-							Player player = createPlayer (playerInfo);
-							if (playerInfo.GetId () == _localId) {
-								player.SetId (_localId);
-								player.SetMoveLocally (true);
-								player.SetGameController (this);
-								player.gameObject.transform.GetChild (0).gameObject.SetActive (true);
-							} 
-							_clientPlayers.Add (playerInfo.GetId(), player);
+							Player player = CreatePlayer (playerInfo);
+							_players.Add (playerInfo.GetId(), player);
 						}
 						break;
 					}
                 }
 
-                packet = _channel.getPacket();
+                packet = _channel.GetPacket();
             }
         }
-	}
-
-    public void SendByteable(Byteable byteable) {
-        _channel.SendAll(byteable);
     }
 
-    void OnDestroy() {
-        _channel.Destroy();   
+	public void SendBroadcast(Byteable byteable, bool reliable = false) {
+		_channel.SendAll(byteable, reliable);
     }
 
-	private ServerPlayer createServerPlayer(PlayerInfo playerInfo){
-		return Instantiate(serverPlayerPrefab, playerInfo.GetPosition(), Quaternion.identity).gameObject.GetComponent<ServerPlayer>();
-	}
+    private Player CreateServerPlayer(PlayerInfo playerInfo){
+		Player player = Instantiate(playerPrefab, playerInfo.GetPosition(), Quaternion.identity).gameObject.GetComponent<Player>();
+		player.SetUpdateLoop(new ServerPlayerUpdateLoop(player));
+		return player;
+    }
 
-	private Player createPlayer(PlayerInfo playerInfo){
-		return Instantiate(clientPlayerPrefab, playerInfo.GetPosition(), Quaternion.identity).gameObject.GetComponent<Player>();
+    private Player CreatePlayer(PlayerInfo playerInfo){
+		Player player = Instantiate(playerPrefab, playerInfo.GetPosition(), Quaternion.identity).gameObject.GetComponent<Player>();
+		if (playerInfo.GetId () == _localId) {
+			player.SetUpdateLoop(new LocalPlayerUpdateLoop(player, this, _localId));
+		} else {
+			player.SetUpdateLoop(new MovementUpdateLoop(player));
+		}
+		return player;
+    }
+
+	void OnDestroy() {
+		_channel.Destroy();   
 	}
 }
 

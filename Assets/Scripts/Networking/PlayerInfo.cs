@@ -7,7 +7,7 @@ public class PlayerInfo : Byteable {
 	private int _id;
 	private PositionInfo _positionInfo;
 
-	public PlayerInfo(int id, ServerPlayer player) : this(id, new PositionInfo(player.transform.position)){
+	public PlayerInfo(int id, Player player) : this(id, new PositionInfo(player.transform.position)){
 	}
 
 	public PlayerInfo(int id, PositionInfo positionInfo) {
