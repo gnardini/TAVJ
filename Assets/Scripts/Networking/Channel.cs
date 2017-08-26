@@ -67,7 +67,7 @@ public class Channel{
     public void SendAllExcluding(byte[] data, IPEndPoint ip){
         foreach (IPEndPoint connectedIp in connections) {
             if (!connectedIp.Equals(ip)) {
-                Send(data, ip);
+				Send(data, connectedIp);
             }
         }
     }
