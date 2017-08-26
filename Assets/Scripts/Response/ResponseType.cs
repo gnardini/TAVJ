@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ResponseType {
+public enum ResponseType : byte {
 
     POSITIONS,
     NEW_PLAYER,

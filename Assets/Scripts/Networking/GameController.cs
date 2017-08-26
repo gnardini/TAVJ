@@ -6,13 +6,15 @@ public class GameController : MonoBehaviour {
 
     public Transform clientPlayerPrefab;
     public Transform serverPlayerPrefab;
+    public Transform autoAttackPrefab;
     public bool isServer;
 
-	private const string SERVER_HOST = "181.26.156.227"; //"127.0.0.1";
+    private const string SERVER_HOST = "192.168.0.18"; // "181.26.156.227";
     private const int PORT = 5500;
     private Channel _channel;
     private Dictionary<int, ServerPlayer> _players;
     private Dictionary<int, Player> _clientPlayers;
+    private Dictionary<int, AutoAttack> _autoAttacks;
     private int _lastId = 0;
     private int _localId;
 
@@ -26,6 +28,7 @@ public class GameController : MonoBehaviour {
             _clientPlayers = new Dictionary<int, Player>();
             SendByteable(new GameStartInput());
         }
+        _autoAttacks = new Dictionary<int, AutoAttack>();
 	}
 	
 	void Update () {
@@ -40,16 +43,17 @@ public class GameController : MonoBehaviour {
                     break;
                 case InputType.AUTOATTACK:
                     AutoAttackInput auto = (AutoAttackInput)input;
-                    _players[auto.GetId()].SpawnAutoAttack(auto.GetTargetPosition());
+                    AutoAttack autoAttack = _players[auto.GetId()].SpawnAutoAttack(auto.GetTargetPosition());
+                    _lastId++;
+                    _autoAttacks.Add(_lastId, autoAttack);
                     _channel.SendAll(new AutoAttackResponse(auto.GetId(), auto.GetTargetPosition()));
                     break;
 				case InputType.START_GAME:
 					_lastId++;
 					Vector3 startPosition = new Vector3 (2f, 1.2f, 0f);
 					ServerPlayer serverPlayer = createServerPlayer(new PlayerInfo(_lastId, startPosition));
-						_players.Add (_lastId, serverPlayer);
+					_players.Add (_lastId, serverPlayer);
 					_channel.Send (new PlayerInfoBroadcast (_lastId, _players), packet.getAddress());
-					//_channel.SendAll (new PlayerInfoBroadcast (_lastId, _players));
                     _channel.SendAllExcluding(new NewPlayerEvent(_lastId, startPosition), packet.getAddress());
                     break;
                 }
@@ -57,6 +61,9 @@ public class GameController : MonoBehaviour {
             }
             foreach(KeyValuePair<int, ServerPlayer> playerInfo in _players) {
                 _channel.SendAll(new MovementResponse(playerInfo.Key, playerInfo.Value.transform.position));
+            }
+            foreach(KeyValuePair<int, AutoAttack> autoInfo in _autoAttacks) {
+                _channel.SendAll(new MovementResponse(autoInfo.Key, autoInfo.Value.transform.position));
             }
         } else {
             Packet packet = _channel.getPacket();
@@ -68,7 +75,9 @@ public class GameController : MonoBehaviour {
 						MovementResponse movementResponse = (MovementResponse)response;
 						if(_clientPlayers.ContainsKey(movementResponse.GetId ())){
 							_clientPlayers [movementResponse.GetId ()].MakeMovement (movementResponse.GetPosition ());
-						}
+                        } else if (_autoAttacks.ContainsKey(movementResponse.GetId())) {
+                            _autoAttacks[movementResponse.GetId()].MoveTo(movementResponse.GetPosition());
+                        }
 						break;
 					}
 				case ResponseType.AUTOATTACK: {

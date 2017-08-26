@@ -61,10 +61,11 @@ public class Player : MonoBehaviour {
         }
     }
 
-    public void SpawnAutoAttack(Vector3 targetPosition) {
+    public AutoAttack SpawnAutoAttack(Vector3 targetPosition) {
         Vector3 relativePosition = targetPosition - transform.position;
         Quaternion rotation = Quaternion.LookRotation(relativePosition);
-        Instantiate(autoAttackPrefab, transform.position + 0.8f * relativePosition.normalized, rotation);
+        Vector3 startPosition = transform.position + 0.8f * relativePosition.normalized;
+        return Instantiate(autoAttackPrefab, startPosition, rotation).GetComponent<AutoAttack>();
     }
 
     void SendMovement() {
