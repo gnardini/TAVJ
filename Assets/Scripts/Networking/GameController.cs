@@ -82,11 +82,6 @@ public class GameController : MonoBehaviour {
             Packet packet = _channel.GetPacket();
 			BitBuffer bitBuffer = new BitBuffer ();
             while (packet != null) {
-				byte[] a = packet.getData();
-				Debug.Log("response size " + a.Length + " " + a[0]);
-//				for(int i =0; i< a.Length; i++){
-//					Debug.Log("array elem["+i+"]: "+a[i]+"      "+System.DateTime.Now.Millisecond);
-//				}
 				bitBuffer.PutBytes(packet.getData());
 				bitBuffer.Flip ();
 				ServerResponse response = ServerResponse.fromBytes(bitBuffer);
