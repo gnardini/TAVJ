@@ -16,6 +16,7 @@ public class Player : MonoBehaviour {
 
     private Rigidbody _rigidBody;
     private HealthBar _healthBar;
+	private int _id;
     private float _healthLeft;
     private UpdateLoop _updateLoop;
 
@@ -38,6 +39,14 @@ public class Player : MonoBehaviour {
         _healthBar.SetHealthPercent(_healthLeft / maxHealth);
     }
 
+	public void SetId(int id) {
+		_id = id;
+	}
+
+	public int GetId() {
+		return _id;
+	}
+
     void FixPosition() {
         transform.position = new Vector3(transform.position.x, 1.2f, transform.position.z);
         transform.rotation = Quaternion.identity;
@@ -53,11 +62,20 @@ public class Player : MonoBehaviour {
         _updateLoop.SetTargetPosition(position);
     }
 
+	public void DoDamage(int damage) {
+		_healthLeft -= damage;
+		if (_healthLeft < 0) {
+			_healthLeft = 0;
+		}
+	}
+
     public AutoAttack SpawnAutoAttack(Vector3 targetPosition) {
         Vector3 relativePosition = targetPosition - transform.position;
         Quaternion rotation = Quaternion.LookRotation(relativePosition);
         Vector3 startPosition = transform.position + 0.8f * relativePosition.normalized;
-        return Instantiate(autoAttackPrefab, startPosition, rotation).GetComponent<AutoAttack>();
+		AutoAttack auto = Instantiate(autoAttackPrefab, startPosition, rotation).GetComponent<AutoAttack>();
+		auto.SetOwnerId(_id);
+		return auto;
     }
 
 	public void SetTargetSign(Vector3 position) {

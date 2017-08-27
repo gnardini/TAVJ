@@ -9,7 +9,7 @@ public class GameController : MonoBehaviour {
     public Transform autoAttackPrefab;
     public bool isServer;
 
-    private const string SERVER_HOST = "192.168.0.18"; // "181.26.156.227";
+	private const string SERVER_HOST = "181.26.156.227"; // "192.168.0.18";
 
     private const int PORT = 5500;
 	private ReliableChannel _channel;
@@ -26,7 +26,7 @@ public class GameController : MonoBehaviour {
 			_channel = new ReliableChannel(PORT+1);
             _channel.AddConnection(SERVER_HOST, PORT);
             _players = new Dictionary<int, Player>();
-            SendBroadcast(new GameStartInput());
+            SendBroadcast(new GameStartInput(), true);
         }
         _autoAttacks = new Dictionary<int, AutoAttack>();
     }
@@ -128,13 +128,13 @@ public class GameController : MonoBehaviour {
     }
 
     private Player CreateServerPlayer(PlayerInfo playerInfo){
-		Player player = Instantiate(playerPrefab, playerInfo.GetPosition(), Quaternion.identity).gameObject.GetComponent<Player>();
+		Player player = InstantiatePlayer(playerInfo);
 		player.SetUpdateLoop(new ServerPlayerUpdateLoop(player));
 		return player;
     }
 
     private Player CreatePlayer(PlayerInfo playerInfo){
-		Player player = Instantiate(playerPrefab, playerInfo.GetPosition(), Quaternion.identity).gameObject.GetComponent<Player>();
+		Player player = InstantiatePlayer(playerInfo);
 		if (playerInfo.GetId () == _localId) {
 			player.SetUpdateLoop(new LocalPlayerUpdateLoop(player, this, _localId));
 		} else {
@@ -142,6 +142,12 @@ public class GameController : MonoBehaviour {
 		}
 		return player;
     }
+
+	private Player InstantiatePlayer(PlayerInfo playerInfo) {
+		Player player = Instantiate(playerPrefab, playerInfo.GetPosition(), Quaternion.identity).gameObject.GetComponent<Player>();
+		player.SetId(playerInfo.GetId());
+		return player;
+	}
 
 	void RemoveDeadAutoAttacks() {
 		Dictionary<int, AutoAttack> autoAttacks = new Dictionary<int, AutoAttack>();

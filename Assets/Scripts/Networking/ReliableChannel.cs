@@ -24,9 +24,10 @@ public class ReliableChannel : Channel {
 	}
 
 
-	public void ResendReliableMessages(){
+	public void ResendReliableMessages() {
 		lock (_reliableMessages) {
 			foreach (KeyValuePair<IPEndPoint , Dictionary<byte, byte[]>> pair in _reliableMessages) {
+				// TODO mandar en el mismo msj
 				foreach (KeyValuePair<byte, byte[]> innerPair in pair.Value) {
 					Send (innerPair.Value, pair.Key);
 				}
