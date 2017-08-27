@@ -7,10 +7,10 @@ public class PlayerInfoBroadcast : ServerResponse {
 	private int _id;
 	private List<PlayerInfo> _playersInfo;
 
-	public PlayerInfoBroadcast(int id, Dictionary<int, ServerPlayer> dict) {
+	public PlayerInfoBroadcast(int id, Dictionary<int, Player> dict) {
 		_id = id;
 		_playersInfo = new List<PlayerInfo> ();
-		foreach (KeyValuePair<int, ServerPlayer> pair in dict) {
+		foreach (KeyValuePair<int, Player> pair in dict) {
 			_playersInfo.Add(new PlayerInfo(pair.Key, pair.Value));
 		}
 	}

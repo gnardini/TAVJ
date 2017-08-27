@@ -5,16 +5,14 @@ using UnityEngine;
 
 public class GameController : MonoBehaviour {
 
-    public Transform clientPlayerPrefab;
-    public Transform serverPlayerPrefab;
+    public Transform playerPrefab;
     public Transform autoAttackPrefab;
     public bool isServer;
 
-    private const string SERVER_HOST = "181.26.156.227";//"192.168.0.18"; // "181.26.156.227";
+	private const string SERVER_HOST = "192.168.0.18";// "181.26.156.227";
     private const int PORT = 5500;
 	private ReliableChannel _channel;
-    private Dictionary<int, ServerPlayer> _players;
-    private Dictionary<int, Player> _clientPlayers;
+	private Dictionary<int, Player> _players;
     private Dictionary<int, AutoAttack> _autoAttacks;
     private int _lastId = 0;
     private int _localId;
@@ -22,11 +20,11 @@ public class GameController : MonoBehaviour {
     void Start () {
         if (isServer) {
             _channel = new ReliableChannel(PORT);
-            _players = new Dictionary<int, ServerPlayer>();
+            _players = new Dictionary<int, Player>();
         } else {
 			_channel = new ReliableChannel(PORT+1);
             _channel.AddConnection(SERVER_HOST, PORT);
-            _clientPlayers = new Dictionary<int, Player>();
+            _players = new Dictionary<int, Player>();
             SendBroadcast(new GameStartInput());
         }
         _autoAttacks = new Dictionary<int, AutoAttack>();
@@ -40,7 +38,7 @@ public class GameController : MonoBehaviour {
                 PlayerInput input = PlayerInput.fromBytes(bytes);
                 switch (input.GetInputType()) {
                 case InputType.MOVEMENT:
-                    _players[input.GetId()].MoveTo(((MovementInput)input).GetPosition());   
+					_players[input.GetId()].SetTargetPosition(((MovementInput)input).GetPosition());   
                     break;
                 case InputType.AUTOATTACK:
                     AutoAttackInput auto = (AutoAttackInput)input;
@@ -52,15 +50,15 @@ public class GameController : MonoBehaviour {
                 case InputType.START_GAME:
                     _lastId++;
                     Vector3 startPosition = new Vector3 (2f, 1.2f, 0f);
-                    ServerPlayer serverPlayer = createServerPlayer(new PlayerInfo(_lastId, startPosition));
-                    _players.Add (_lastId, serverPlayer);
+                    Player player = CreateServerPlayer(new PlayerInfo(_lastId, startPosition));
+                    _players.Add (_lastId, player);
                     _channel.Send (new PlayerInfoBroadcast (_lastId, _players), packet.getAddress(), true);
                     _channel.SendAllExcluding(new NewPlayerEvent(_lastId, startPosition), packet.getAddress(), true);
                     break;
                 }
                 packet = _channel.GetPacket();
             }
-            foreach(KeyValuePair<int, ServerPlayer> playerInfo in _players) {
+            foreach(KeyValuePair<int, Player> playerInfo in _players) {
                 _channel.SendAll(new MovementResponse(playerInfo.Key, playerInfo.Value.transform.position), false);
             }
             foreach(KeyValuePair<int, AutoAttack> autoInfo in _autoAttacks) {
@@ -74,44 +72,34 @@ public class GameController : MonoBehaviour {
                 switch (response.GetResponseType()) {
                 case ResponseType.POSITIONS: {
                         MovementResponse movementResponse = (MovementResponse)response;
-                        if(_clientPlayers.ContainsKey(movementResponse.GetId ())){
-                            _clientPlayers [movementResponse.GetId ()].MakeMovement (movementResponse.GetPosition ());
+                        if(_players.ContainsKey(movementResponse.GetId ())){
+							_players [movementResponse.GetId ()].SetTargetPosition(movementResponse.GetPosition ());
                         } else if (_autoAttacks.ContainsKey(movementResponse.GetId())) {
                             _autoAttacks[movementResponse.GetId()].MoveTo(movementResponse.GetPosition());
                         }
-                        break;
-                    }
-                case ResponseType.AUTOATTACK: {
-                        AutoAttackResponse auto = (AutoAttackResponse)response;
-                        _clientPlayers [auto.GetId ()].SpawnAutoAttack (auto.GetPosition ());
-                        break;
-                    }
-                case ResponseType.NEW_PLAYER: {
-                        NewPlayerEvent newPlayerEvent = (NewPlayerEvent)response;
-                        PlayerInfo playerInfo = newPlayerEvent.GetPlayerInfo ();
-                        if (!_clientPlayers.ContainsKey(playerInfo.GetId())) {
-                            Player player = createPlayer (playerInfo);
-                            _clientPlayers.Add (playerInfo.GetId (), player);   
-                        }
-                        break;
-                    }
-                case ResponseType.PLAYER_INFO_BROADCAST: { 
-                        PlayerInfoBroadcast playerInfoBroadcast = (PlayerInfoBroadcast)response;
-                        _localId = playerInfoBroadcast.GetId ();
-                        foreach (PlayerInfo playerInfo in playerInfoBroadcast.getPlayersInfo()) {
-							if (!_clientPlayers.ContainsKey (playerInfo.GetId ())) {
-		                        Player player = createPlayer (playerInfo);
-		                        if (playerInfo.GetId () == _localId) {
-		                            player.SetId (_localId);
-		                            player.SetMoveLocally (true);
-		                            player.SetGameController (this);
-		                            player.gameObject.transform.GetChild (0).gameObject.SetActive (true);
-		                        } 
-								_clientPlayers.Add (playerInfo.GetId (), player);
-							}
-                        }
-                        break;
-                    }
+						break;
+					}
+				case ResponseType.AUTOATTACK: {
+						AutoAttackResponse auto = (AutoAttackResponse)response;
+						_players [auto.GetId ()].SpawnAutoAttack (auto.GetPosition ());
+						break;
+					}
+				case ResponseType.NEW_PLAYER: {
+						NewPlayerEvent newPlayerEvent = (NewPlayerEvent)response;
+						PlayerInfo playerInfo = newPlayerEvent.GetPlayerInfo ();
+						Player player = CreatePlayer (playerInfo);
+						_players.Add (playerInfo.GetId (), player);
+						break;
+					}
+				case ResponseType.PLAYER_INFO_BROADCAST: { 
+						PlayerInfoBroadcast playerInfoBroadcast = (PlayerInfoBroadcast)response;
+						_localId = playerInfoBroadcast.GetId ();
+						foreach (PlayerInfo playerInfo in playerInfoBroadcast.getPlayersInfo()) {
+							Player player = CreatePlayer (playerInfo);
+							_players.Add (playerInfo.GetId(), player);
+						}
+						break;
+					}
                 }
 
                 packet = _channel.GetPacket();
@@ -123,16 +111,25 @@ public class GameController : MonoBehaviour {
 		_channel.SendAll(byteable, reliable);
     }
 
-    void OnDestroy() {
-        _channel.Destroy();   
+    private Player CreateServerPlayer(PlayerInfo playerInfo){
+		Player player = Instantiate(playerPrefab, playerInfo.GetPosition(), Quaternion.identity).gameObject.GetComponent<Player>();
+		player.SetUpdateLoop(new ServerPlayerUpdateLoop(player));
+		return player;
     }
 
-    private ServerPlayer createServerPlayer(PlayerInfo playerInfo){
-        return Instantiate(serverPlayerPrefab, playerInfo.GetPosition(), Quaternion.identity).gameObject.GetComponent<ServerPlayer>();
+    private Player CreatePlayer(PlayerInfo playerInfo){
+		Player player = Instantiate(playerPrefab, playerInfo.GetPosition(), Quaternion.identity).gameObject.GetComponent<Player>();
+		if (playerInfo.GetId () == _localId) {
+			player.SetUpdateLoop(new LocalPlayerUpdateLoop(player, this, _localId));
+		} else {
+			player.SetUpdateLoop(new MovementUpdateLoop(player));
+		}
+		return player;
     }
 
-    private Player createPlayer(PlayerInfo playerInfo){
-        return Instantiate(clientPlayerPrefab, playerInfo.GetPosition(), Quaternion.identity).gameObject.GetComponent<Player>();
-    }
+	void OnDestroy() {
+		_channel.Destroy();   
+	}
+
 }
 
