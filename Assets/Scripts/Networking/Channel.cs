@@ -51,9 +51,6 @@ public class Channel{
 		_socket.Send(data, data.Length, ip);
 	}
 
-	public void Send(Byteable data, IPEndPoint ip){
-        Send(data.toBytes(), ip);
-	}
 	/*
 	public void SendAll(byte[] data){
 		foreach(IPEndPoint ip in _connections)

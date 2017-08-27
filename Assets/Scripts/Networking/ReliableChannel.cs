@@ -88,7 +88,7 @@ public class ReliableChannel : Channel {
 
 
 	private byte[] PrepareToSend(int messageType, byte[] data){
-		BitBuffer bitBuffer = new BitBuffer ();
+		CustomBitBuffer bitBuffer = new CustomBitBuffer ();
 		bitBuffer.WriteByte ((byte)messageType);
 		bitBuffer.WriteBytes (data);
 		return bitBuffer.Read ();
@@ -115,7 +115,10 @@ public class ReliableChannel : Channel {
 	}
 
 	public void Send(Byteable data, IPEndPoint ip, bool reliable){
-		Send(data.toBytes(), ip, reliable);
+		BitBuffer bitBuffer = new BitBuffer ();
+		data.PutBytes (bitBuffer);
+		bitBuffer.Flip ();
+		Send(bitBuffer.GetByteArray(), ip, reliable);
 	}
 
 	public void SendAll(byte[] data, bool reliable){
@@ -124,7 +127,10 @@ public class ReliableChannel : Channel {
 	}
 
 	public void SendAll(Byteable data, bool reliable){
-		SendAll (data.toBytes(), reliable);
+		BitBuffer bitBuffer = new BitBuffer ();
+		data.PutBytes (bitBuffer);
+		bitBuffer.Flip ();
+		SendAll (bitBuffer.GetByteArray(), reliable);
 	}
 
 	public void SendAllExcluding(byte[] data, IPEndPoint ip, bool reliable){
@@ -136,7 +142,10 @@ public class ReliableChannel : Channel {
 	}
 
 	public void SendAllExcluding(Byteable data, IPEndPoint ip, bool reliable){
-		SendAllExcluding (data.toBytes(), ip, reliable);
+		BitBuffer bitBuffer = new BitBuffer ();
+		data.PutBytes (bitBuffer);
+		bitBuffer.Flip ();
+		SendAllExcluding (bitBuffer.GetByteArray(), ip, reliable);
 	}
 
 	private static readonly DateTime Jan1st1970 = new DateTime

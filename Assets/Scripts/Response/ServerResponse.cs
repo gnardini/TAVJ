@@ -4,29 +4,28 @@ using UnityEngine;
 
 public abstract class ServerResponse : Byteable {
 
-    public static ServerResponse fromBytes(byte[] bytes) {
-        switch ((ResponseType) bytes[0]) {
+	public static ServerResponse fromBytes(BitBuffer bitBuffer) {
+		ResponseType type = (ResponseType)bitBuffer.GetByte ();
+		switch (type) {
         case ResponseType.POSITIONS:
-            return MovementResponse.FromBytes(bytes, 1);
+			return MovementResponse.FromBytes(bitBuffer);
         case ResponseType.AUTOATTACK:
-            return AutoAttackResponse.FromBytes(bytes, 1);
+			return AutoAttackResponse.FromBytes(bitBuffer);
         case ResponseType.NEW_PLAYER:
-            return NewPlayerEvent.FromBytes(bytes, 1);
+			return NewPlayerEvent.FromBytes(bitBuffer);
 		case ResponseType.PLAYER_INFO_BROADCAST:
-			return PlayerInfoBroadcast.FromBytes (bytes, 1);
+			return PlayerInfoBroadcast.FromBytes (bitBuffer);
         }
 
         return null;
     }
 
-    public byte[] toBytes() {
-        BitBuffer bitBuffer = new BitBuffer();
-        bitBuffer.WriteByte((byte) GetResponseType());
-        bitBuffer.WriteBytes(ExtraBytes());
-        return bitBuffer.Read();
+	public void PutBytes(BitBuffer bitBuffer) {
+        bitBuffer.PutByte((byte) GetResponseType());
+		PutExtraBytes(bitBuffer);
     }
 
-    protected abstract byte[] ExtraBytes();
+	protected abstract void PutExtraBytes(BitBuffer bitBuffer);
 
     public abstract ResponseType GetResponseType();
 }

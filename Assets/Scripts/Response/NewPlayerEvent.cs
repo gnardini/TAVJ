@@ -18,18 +18,17 @@ public class NewPlayerEvent : ServerResponse {
 		_playerInfo = new PlayerInfo (id, positionInfo);
     }
 
-    public static NewPlayerEvent FromBytes(byte[] data, int offset) {
-        return new NewPlayerEvent((int) data[offset], PositionInfo.fromBytes(data, offset+1));
+	public static NewPlayerEvent FromBytes(BitBuffer bitBuffer) {
+		int id = bitBuffer.GetByte ();
+		return new NewPlayerEvent(id, PositionInfo.fromBytes(bitBuffer));
     }
 
     public PlayerInfo GetPlayerInfo() {
         return _playerInfo;
     }
 
-    protected override byte[] ExtraBytes() {
-        BitBuffer bitBuffer = new BitBuffer();
-		bitBuffer.WriteBytes (_playerInfo.toBytes ());
-        return bitBuffer.Read();
+	protected override void PutExtraBytes(BitBuffer bitBuffer) {
+		_playerInfo.PutBytes (bitBuffer);
     }
 
     public override ResponseType GetResponseType() {

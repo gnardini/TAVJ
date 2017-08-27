@@ -10,15 +10,16 @@ public abstract class PlayerInput : Byteable {
         _id = id;
     }
 
-    public static PlayerInput fromBytes(byte[] bytes) {
-        int id = bytes[0];
-        switch ((InputType) bytes[1]) {
+	public static PlayerInput fromBytes(BitBuffer bitBuffer) {
+		int id = bitBuffer.GetByte();
+		InputType type = (InputType)bitBuffer.GetByte ();
+		switch (type) {
         case InputType.MOVEMENT:
-            return MovementInput.FromBytes(id, bytes, 2);
+			return MovementInput.FromBytes(id, bitBuffer);
         case InputType.AUTOATTACK:
-            return AutoAttackInput.FromBytes(id, bytes, 2);
+			return AutoAttackInput.FromBytes(id, bitBuffer);
         case InputType.START_GAME:
-            return GameStartInput.FromBytes(id, bytes, 2);
+			return GameStartInput.FromBytes(id, bitBuffer);
         }
         return null;
     }
@@ -27,15 +28,13 @@ public abstract class PlayerInput : Byteable {
         return _id;
     }
 
-    public byte[] toBytes() {
-        BitBuffer bitBuffer = new BitBuffer();
-        bitBuffer.WriteByte((byte) _id);
-        bitBuffer.WriteByte((byte) GetInputType());
-        bitBuffer.WriteBytes(ExtraBytes());
-        return bitBuffer.Read();
+	public void PutBytes(BitBuffer bitBuffer) {
+        bitBuffer.PutByte((byte) _id);
+        bitBuffer.PutByte((byte) GetInputType());
+		PutExtraBytes(bitBuffer);
     }
 
-    protected abstract byte[] ExtraBytes();
+	protected abstract void PutExtraBytes(BitBuffer bitBuffer);
 
     public abstract InputType GetInputType();
 }

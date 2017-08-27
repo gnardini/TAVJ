@@ -9,7 +9,8 @@ public class GameController : MonoBehaviour {
     public Transform autoAttackPrefab;
     public bool isServer;
 
-	private const string SERVER_HOST = "192.168.0.18";// "181.26.156.227";
+    private const string SERVER_HOST = "192.168.0.18"; // "181.26.156.227";
+
     private const int PORT = 5500;
 	private ReliableChannel _channel;
 	private Dictionary<int, Player> _players;
@@ -33,9 +34,11 @@ public class GameController : MonoBehaviour {
     void Update () {
         if (isServer) {
             Packet packet = _channel.GetPacket();
+			BitBuffer bitBuffer = new BitBuffer ();
             while (packet != null) {
-                byte[] bytes = packet.getData ();
-                PlayerInput input = PlayerInput.fromBytes(bytes);
+				bitBuffer.PutBytes(packet.getData ());
+				bitBuffer.Flip ();
+				PlayerInput input = PlayerInput.fromBytes(bitBuffer);
                 switch (input.GetInputType()) {
                 case InputType.MOVEMENT:
 					_players[input.GetId()].SetTargetPosition(((MovementInput)input).GetPosition());   
@@ -57,19 +60,31 @@ public class GameController : MonoBehaviour {
                     break;
                 }
                 packet = _channel.GetPacket();
+				bitBuffer.Clear ();
             }
             foreach(KeyValuePair<int, Player> playerInfo in _players) {
-                _channel.SendAll(new MovementResponse(playerInfo.Key, playerInfo.Value.transform.position), false);
+				_channel.SendAll(new MovementResponse(playerInfo.Key, playerInfo.Value.transform.position), false);
+//				new MovementResponse (playerInfo.Key, playerInfo.Value.transform.position).PutBytes (bitBuffer);
             }
+//			bitBuffer.Flip ();
+//			_channel.SendAll(bitBuffer.GetByteArray(), false);
+
+//			bitBuffer.Clear ();
 			RemoveDeadAutoAttacks();
             foreach(KeyValuePair<int, AutoAttack> autoInfo in _autoAttacks) {
-                _channel.SendAll(new MovementResponse(autoInfo.Key, autoInfo.Value.transform.position), false);
+				_channel.SendAll(new MovementResponse(autoInfo.Key, autoInfo.Value.transform.position), false);
+//				new MovementResponse(autoInfo.Key, autoInfo.Value.transform.position).PutBytes(bitBuffer);
             }
+//			bitBuffer.Flip ();
+//			_channel.SendAll(bitBuffer.GetByteArray(), false);
+
         } else {
             Packet packet = _channel.GetPacket();
+			BitBuffer bitBuffer = new BitBuffer ();
             while (packet != null) {
-                byte[] bytes = packet.getData();
-                ServerResponse response = ServerResponse.fromBytes(bytes);
+				bitBuffer.PutBytes(packet.getData());
+				bitBuffer.Flip ();
+				ServerResponse response = ServerResponse.fromBytes(bitBuffer);
                 switch (response.GetResponseType()) {
                 case ResponseType.POSITIONS: {
                         MovementResponse movementResponse = (MovementResponse)response;
@@ -102,8 +117,8 @@ public class GameController : MonoBehaviour {
 						break;
 					}
                 }
-
                 packet = _channel.GetPacket();
+				bitBuffer.Clear ();
             }
         }
     }

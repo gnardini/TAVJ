@@ -7,12 +7,11 @@ public class GameStartInput : PlayerInput {
     public GameStartInput() : base(0) {
     }
 
-    public static GameStartInput FromBytes(int id, byte[] data, int offset) {
+	public static GameStartInput FromBytes(int id, BitBuffer bitBuffer) {
         return new GameStartInput();
     }
 
-    protected override byte[] ExtraBytes() {
-        return new byte[0];
+	protected override void PutExtraBytes(BitBuffer bitBuffer) {
     }
 
     public override InputType GetInputType() {
