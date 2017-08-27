@@ -21,9 +21,11 @@ public class ReliableChannel : Channel {
 
 
 	public void ResendReliableMessages(){
-		foreach (KeyValuePair<IPEndPoint , Dictionary<byte, byte[]>> pair in _reliableMessages) {
-			foreach (KeyValuePair<byte, byte[]> innerPair in pair.Value) {
-				Send (innerPair.Value, pair.Key, true);
+		lock (_reliableMessages) {
+			foreach (KeyValuePair<IPEndPoint , Dictionary<byte, byte[]>> pair in _reliableMessages) {
+				foreach (KeyValuePair<byte, byte[]> innerPair in pair.Value) {
+					Send (innerPair.Value, pair.Key);
+				}
 			}
 		}
 	}
@@ -40,14 +42,16 @@ public class ReliableChannel : Channel {
 			switch (header) {
 			case ACK:{
 					Debug.Log ("Ack received");
-					_reliableMessages [packet.getAddress ()].Remove (data [1]);
+					lock (_reliableMessages) {
+						_reliableMessages [packet.getAddress ()].Remove (data [1]);
+					}
 					break;
 				}
 			case NON_RELIABLE:{
 					return new Packet (CreateCopy (data, 1), packet.getAddress ());
 				}
 			default:{
-					Debug.Log ("Reliable received");
+					Debug.Log ("Reliable received "+data[0]);
 					Send(PrepareToSend(ACK, new byte[]{data[0]}), packet.getAddress());
 					return new Packet (CreateCopy (data, 1), packet.getAddress ());
 				}
@@ -81,10 +85,12 @@ public class ReliableChannel : Channel {
 		if (reliable) {
 			byte nextSeqNumber = GetNextReliableSeqNumber ();
 			data = PrepareToSend (nextSeqNumber, data);
-			if (!_reliableMessages.ContainsKey (ip)) {
-				_reliableMessages [ip] = new Dictionary<byte, byte[]> ();
+			lock (_reliableMessages) {
+				if (!_reliableMessages.ContainsKey (ip)) {
+					_reliableMessages.Add (ip, new Dictionary<byte, byte[]> ());
+				}
+				_reliableMessages [ip].Add (nextSeqNumber, data);
 			}
-			_reliableMessages [ip] [nextSeqNumber] = data;
 		} else {
 			data = PrepareToSend (NON_RELIABLE, data);
 		}

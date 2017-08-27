@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class GameController : MonoBehaviour {
 
     public Transform clientPlayerPrefab;
@@ -98,14 +99,16 @@ public class GameController : MonoBehaviour {
                         PlayerInfoBroadcast playerInfoBroadcast = (PlayerInfoBroadcast)response;
                         _localId = playerInfoBroadcast.GetId ();
                         foreach (PlayerInfo playerInfo in playerInfoBroadcast.getPlayersInfo()) {
-                            Player player = createPlayer (playerInfo);
-                            if (playerInfo.GetId () == _localId) {
-                                player.SetId (_localId);
-                                player.SetMoveLocally (true);
-                                player.SetGameController (this);
-                                player.gameObject.transform.GetChild (0).gameObject.SetActive (true);
-                            } 
-                            _clientPlayers.Add (playerInfo.GetId(), player);
+							if (!_clientPlayers.ContainsKey (playerInfo.GetId ())) {
+		                        Player player = createPlayer (playerInfo);
+		                        if (playerInfo.GetId () == _localId) {
+		                            player.SetId (_localId);
+		                            player.SetMoveLocally (true);
+		                            player.SetGameController (this);
+		                            player.gameObject.transform.GetChild (0).gameObject.SetActive (true);
+		                        } 
+								_clientPlayers.Add (playerInfo.GetId (), player);
+							}
                         }
                         break;
                     }
