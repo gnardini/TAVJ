@@ -28,7 +28,11 @@ public class BitBuffer {
 	public byte[] GetByteArray(){
 		int size = GetAvailableByteCount();
 		byte[] bytes = new byte[size];
-		buffer.Read (bytes, 0, size);
+		for (int i = 0; i < bytes.Length; i++) {
+			bytes[i] = GetByte();
+		}
+//		buffer.Read (bytes, 0, size);
+//		Debug.Log("asdasd " + bytes[0] + " " + bytes[1]);
 		return bytes;
 	}
 
@@ -90,8 +94,10 @@ public class BitBuffer {
 	}
 
 	public void PutByte(int value) {
+//		Debug.Log("putting " + value);
 		// use sbyte to match java signed byte behavior
 		PutBits(value, byte.MinValue, byte.MaxValue);
+//		Debug.Log("to string " + bits.ToString("X"));
 	}
 
 	public void PutSignedByte(int value) {

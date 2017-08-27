@@ -48,10 +48,6 @@ public class Channel{
 	}
 
 	public void Send(byte[] data, IPEndPoint ip){
-		Debug.Log ("send " + data.Length);
-		foreach (byte b in data) {
-			Debug.Log (b);
-		}
 		_socket.Send(data, data.Length, ip);
 	}
 

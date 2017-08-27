@@ -10,7 +10,7 @@ public class GameController : MonoBehaviour {
     public Transform autoAttackPrefab;
     public bool isServer;
 
-    private const string SERVER_HOST = "181.26.156.227";//"192.168.0.18"; // "181.26.156.227";
+    private const string SERVER_HOST = "192.168.0.18"; // "181.26.156.227";
     private const int PORT = 5500;
 	private ReliableChannel _channel;
     private Dictionary<int, ServerPlayer> _players;
@@ -51,40 +51,42 @@ public class GameController : MonoBehaviour {
                     _autoAttacks.Add(_lastId, autoAttack);
                     _channel.SendAll(new AutoAttackResponse(auto.GetId(), auto.GetTargetPosition()), false);
                     break;
-                case InputType.START_GAME:
-                    _lastId++;
-                    Vector3 startPosition = new Vector3 (2f, 1.2f, 0f);
-                    ServerPlayer serverPlayer = createServerPlayer(new PlayerInfo(_lastId, startPosition));
-                    _players.Add (_lastId, serverPlayer);
-                    _channel.Send (new PlayerInfoBroadcast (_lastId, _players), packet.getAddress(), true);
-                    _channel.SendAllExcluding(new NewPlayerEvent(_lastId, startPosition), packet.getAddress(), true);
+				case InputType.START_GAME:
+					_lastId++;
+					Vector3 startPosition = new Vector3(2f, 1.2f, 0f);
+					ServerPlayer serverPlayer = createServerPlayer(new PlayerInfo(_lastId, startPosition));
+					_players.Add(_lastId, serverPlayer);
+					_channel.Send(new PlayerInfoBroadcast(_lastId, _players), packet.getAddress(), true);
+					_channel.SendAllExcluding(new NewPlayerEvent(_lastId, startPosition), packet.getAddress(), true);
                     break;
                 }
                 packet = _channel.GetPacket();
 				bitBuffer.Clear ();
             }
             foreach(KeyValuePair<int, ServerPlayer> playerInfo in _players) {
-				new MovementResponse (playerInfo.Key, playerInfo.Value.transform.position).PutBytes (bitBuffer);
+				_channel.SendAll(new MovementResponse(playerInfo.Key, playerInfo.Value.transform.position), false);
+//				new MovementResponse (playerInfo.Key, playerInfo.Value.transform.position).PutBytes (bitBuffer);
             }
-			bitBuffer.Flip ();
-			_channel.SendAll(bitBuffer.GetByteArray(), false);
+//			bitBuffer.Flip ();
+//			_channel.SendAll(bitBuffer.GetByteArray(), false);
 
-			bitBuffer.Clear ();
+//			bitBuffer.Clear ();
             foreach(KeyValuePair<int, AutoAttack> autoInfo in _autoAttacks) {
-				new MovementResponse(autoInfo.Key, autoInfo.Value.transform.position).PutBytes(bitBuffer);
+				_channel.SendAll(new MovementResponse(autoInfo.Key, autoInfo.Value.transform.position), false);
+//				new MovementResponse(autoInfo.Key, autoInfo.Value.transform.position).PutBytes(bitBuffer);
             }
-			bitBuffer.Flip ();
-			_channel.SendAll(bitBuffer.GetByteArray(), false);
+//			bitBuffer.Flip ();
+//			_channel.SendAll(bitBuffer.GetByteArray(), false);
 
         } else {
             Packet packet = _channel.GetPacket();
 			BitBuffer bitBuffer = new BitBuffer ();
             while (packet != null) {
 				byte[] a = packet.getData();
-				Debug.Log ("response size " + a.Length);
-				for(int i =0; i< a.Length; i++){
-					Debug.Log("array elem["+i+"]: "+a[i]+"      "+System.DateTime.Now.Millisecond);
-				}
+				Debug.Log("response size " + a.Length + " " + a[0]);
+//				for(int i =0; i< a.Length; i++){
+//					Debug.Log("array elem["+i+"]: "+a[i]+"      "+System.DateTime.Now.Millisecond);
+//				}
 				bitBuffer.PutBytes(packet.getData());
 				bitBuffer.Flip ();
 				ServerResponse response = ServerResponse.fromBytes(bitBuffer);
