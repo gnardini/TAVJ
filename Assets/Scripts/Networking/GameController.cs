@@ -11,7 +11,7 @@ public class GameController : MonoBehaviour {
 
     private const string SERVER_HOST = "181.26.156.227";//"192.168.0.18"; // "181.26.156.227";
     private const int PORT = 5500;
-    private Channel _channel;
+	private ReliableChannel _channel;
     private Dictionary<int, ServerPlayer> _players;
     private Dictionary<int, Player> _clientPlayers;
     private Dictionary<int, AutoAttack> _autoAttacks;
@@ -20,20 +20,20 @@ public class GameController : MonoBehaviour {
 
     void Start () {
         if (isServer) {
-            _channel = new Channel(PORT);
+            _channel = new ReliableChannel(PORT);
             _players = new Dictionary<int, ServerPlayer>();
         } else {
-            _channel = new Channel(PORT+1);
+			_channel = new ReliableChannel(PORT+1);
             _channel.AddConnection(SERVER_HOST, PORT);
             _clientPlayers = new Dictionary<int, Player>();
-            SendByteable(new GameStartInput());
+            SendBroadcast(new GameStartInput());
         }
         _autoAttacks = new Dictionary<int, AutoAttack>();
     }
 
     void Update () {
         if (isServer) {
-            Packet packet = _channel.getPacket();
+            Packet packet = _channel.GetPacket();
             while (packet != null) {
                 byte[] bytes = packet.getData ();
                 PlayerInput input = PlayerInput.fromBytes(bytes);
@@ -46,27 +46,27 @@ public class GameController : MonoBehaviour {
                     AutoAttack autoAttack = _players[auto.GetId()].SpawnAutoAttack(auto.GetTargetPosition());
                     _lastId++;
                     _autoAttacks.Add(_lastId, autoAttack);
-                    _channel.SendAll(new AutoAttackResponse(auto.GetId(), auto.GetTargetPosition()));
+                    _channel.SendAll(new AutoAttackResponse(auto.GetId(), auto.GetTargetPosition()), false);
                     break;
                 case InputType.START_GAME:
                     _lastId++;
                     Vector3 startPosition = new Vector3 (2f, 1.2f, 0f);
                     ServerPlayer serverPlayer = createServerPlayer(new PlayerInfo(_lastId, startPosition));
                     _players.Add (_lastId, serverPlayer);
-                    _channel.Send (new PlayerInfoBroadcast (_lastId, _players), packet.getAddress());
-                    _channel.SendAllExcluding(new NewPlayerEvent(_lastId, startPosition), packet.getAddress());
+                    _channel.Send (new PlayerInfoBroadcast (_lastId, _players), packet.getAddress(), true);
+                    _channel.SendAllExcluding(new NewPlayerEvent(_lastId, startPosition), packet.getAddress(), true);
                     break;
                 }
-                packet = _channel.getPacket();
+                packet = _channel.GetPacket();
             }
             foreach(KeyValuePair<int, ServerPlayer> playerInfo in _players) {
-                _channel.SendAll(new MovementResponse(playerInfo.Key, playerInfo.Value.transform.position));
+                _channel.SendAll(new MovementResponse(playerInfo.Key, playerInfo.Value.transform.position), false);
             }
             foreach(KeyValuePair<int, AutoAttack> autoInfo in _autoAttacks) {
-                _channel.SendAll(new MovementResponse(autoInfo.Key, autoInfo.Value.transform.position));
+                _channel.SendAll(new MovementResponse(autoInfo.Key, autoInfo.Value.transform.position), false);
             }
         } else {
-            Packet packet = _channel.getPacket();
+            Packet packet = _channel.GetPacket();
             while (packet != null) {
                 byte[] bytes = packet.getData();
                 ServerResponse response = ServerResponse.fromBytes(bytes);
@@ -111,13 +111,13 @@ public class GameController : MonoBehaviour {
                     }
                 }
 
-                packet = _channel.getPacket();
+                packet = _channel.GetPacket();
             }
         }
     }
 
-    public void SendByteable(Byteable byteable) {
-        _channel.SendAll(byteable);
+	public void SendBroadcast(Byteable byteable, bool reliable = false) {
+		_channel.SendAll(byteable, reliable);
     }
 
     void OnDestroy() {

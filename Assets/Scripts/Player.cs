@@ -75,7 +75,7 @@ public class Player : MonoBehaviour {
             if (Physics.Raycast(ray, out hit)) {
                 _targetPosition = hit.point;
                 _targetPosition.y = transform.position.y;
-                _gameController.SendByteable(new MovementInput(_id, new PositionInfo(_targetPosition)));
+                _gameController.SendBroadcast(new MovementInput(_id, new PositionInfo(_targetPosition)));
                 _targetPositionSign.transform.position = 
                     new Vector3(_targetPosition.x, _targetPositionSign.transform.position.y, _targetPosition.z);
                 _targetPositionSign.SetActive(true);
@@ -92,7 +92,7 @@ public class Player : MonoBehaviour {
                 _autoAttackCooldownRemaining = autoAttackCooldown;
                 Vector3 targetPosition = hit.point;
                 targetPosition.y = transform.position.y;
-                _gameController.SendByteable(new AutoAttackInput(_id, targetPosition));
+                _gameController.SendBroadcast(new AutoAttackInput(_id, targetPosition));
             }
         }
     }
