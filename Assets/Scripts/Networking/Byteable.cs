@@ -2,7 +2,7 @@
 
 public interface Byteable {
 
-	byte[] toBytes();
+	void PutBytes(BitBuffer bitBuffer);
 }
 
 

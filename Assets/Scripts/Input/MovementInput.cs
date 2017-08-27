@@ -14,16 +14,16 @@ public class MovementInput : PlayerInput {
         _positionInfo = positionInfo;
     }
 
-    public static MovementInput FromBytes(int id, byte[] data, int offset) {
-        return new MovementInput(id, PositionInfo.fromBytes(data, offset));
+	public static MovementInput FromBytes(int id, BitBuffer bitBuffer) {
+		return new MovementInput(id, PositionInfo.fromBytes(bitBuffer));
     }
 
     public Vector3 GetPosition() {
         return _positionInfo.GetPosition();
     }
 
-    protected override byte[] ExtraBytes() {
-        return _positionInfo.toBytes();
+	protected override void PutExtraBytes(BitBuffer bitBuffer) {
+        _positionInfo.PutBytes(bitBuffer);
     }
 
     public override InputType GetInputType() {

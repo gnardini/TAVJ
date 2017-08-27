@@ -14,16 +14,16 @@ public class AutoAttackInput : PlayerInput {
         _target = positionInfo;
     }
 
-    public static AutoAttackInput FromBytes(int id, byte[] data, int offset) {
-        return new AutoAttackInput(id, PositionInfo.fromBytes(data, offset));
+	public static AutoAttackInput FromBytes(int id, BitBuffer bitBuffer) {
+		return new AutoAttackInput(id, PositionInfo.fromBytes(bitBuffer));
     }
 
     public Vector3 GetTargetPosition() {
         return _target.GetPosition();
     }
 
-    protected override byte[] ExtraBytes() {
-        return _target.toBytes();
+	protected override void PutExtraBytes(BitBuffer bitBuffer) {
+		_target.PutBytes(bitBuffer);
     }
 
     public override InputType GetInputType() {

@@ -14,19 +14,17 @@ public class PositionInfo : Byteable {
         return _position;
     }
 
-    public static PositionInfo fromBytes(byte[] bytes, int offset=0) {
-        float x = System.BitConverter.ToSingle(bytes, offset);
-        float y = System.BitConverter.ToSingle(bytes, offset+4);
-        float z = System.BitConverter.ToSingle(bytes, offset+8);
+	public static PositionInfo fromBytes(BitBuffer bitBuffer) {
+		float x = bitBuffer.GetFloat ();
+		float y = bitBuffer.GetFloat ();
+		float z = bitBuffer.GetFloat ();
         return new PositionInfo(new Vector3(x, y, z));
     }
 
-    public byte[] toBytes() {
-        BitBuffer bitBuffer = new BitBuffer();
-        bitBuffer.WriteFloat(_position.x);
-        bitBuffer.WriteFloat(_position.y);
-        bitBuffer.WriteFloat(_position.z);
-        return bitBuffer.Read();
+	public void PutBytes(BitBuffer bitBuffer) {
+        bitBuffer.PutFloat(_position.x);
+        bitBuffer.PutFloat(_position.y);
+        bitBuffer.PutFloat(_position.z);
     }
 
 }

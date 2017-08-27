@@ -21,15 +21,12 @@ public class PlayerInfoBroadcast : ServerResponse {
 		_playersInfo = list;
 	}
 
-	public static PlayerInfoBroadcast FromBytes(byte[] data, int offset) {
-		int id = data [offset];
-		offset++;
-		int count = data [offset];
-		offset++;
+	public static PlayerInfoBroadcast FromBytes(BitBuffer bitBuffer) {
+		int id = bitBuffer.GetByte();
+		int count = bitBuffer.GetByte();
 		List<PlayerInfo> list = new List<PlayerInfo> ();
 		for (int i = 0; i < count; i++) {
-			PlayerInfo playerInfo = PlayerInfo.fromBytes (data, offset);
-			offset += 13;
+			PlayerInfo playerInfo = PlayerInfo.fromBytes (bitBuffer);
 			list.Add (playerInfo);
 		}
 		return new PlayerInfoBroadcast (id, list);
@@ -43,14 +40,12 @@ public class PlayerInfoBroadcast : ServerResponse {
 		return _playersInfo;
 	}
 
-	protected override byte[] ExtraBytes() {
-		BitBuffer bitBuffer = new BitBuffer();
-		bitBuffer.WriteByte((byte) _id);
-		bitBuffer.WriteByte ((byte)_playersInfo.Count);
+	protected override void PutExtraBytes(BitBuffer bitBuffer) {
+		bitBuffer.PutByte((byte) _id);
+		bitBuffer.PutByte ((byte)_playersInfo.Count);
 		foreach (PlayerInfo playerInfo in _playersInfo) {
-			bitBuffer.WriteBytes (playerInfo.toBytes());
+			playerInfo.PutBytes(bitBuffer);
 		}
-		return bitBuffer.Read();
 	}
 
 	public override ResponseType GetResponseType() {

@@ -35,9 +35,11 @@ public class GameController : MonoBehaviour {
     void Update () {
         if (isServer) {
             Packet packet = _channel.GetPacket();
+			BitBuffer bitBuffer = new BitBuffer ();
             while (packet != null) {
-                byte[] bytes = packet.getData ();
-                PlayerInput input = PlayerInput.fromBytes(bytes);
+				bitBuffer.PutBytes(packet.getData ());
+				bitBuffer.Flip ();
+				PlayerInput input = PlayerInput.fromBytes(bitBuffer);
                 switch (input.GetInputType()) {
                 case InputType.MOVEMENT:
                     _players[input.GetId()].MoveTo(((MovementInput)input).GetPosition());   
@@ -59,18 +61,33 @@ public class GameController : MonoBehaviour {
                     break;
                 }
                 packet = _channel.GetPacket();
+				bitBuffer.Clear ();
             }
             foreach(KeyValuePair<int, ServerPlayer> playerInfo in _players) {
-                _channel.SendAll(new MovementResponse(playerInfo.Key, playerInfo.Value.transform.position), false);
+				new MovementResponse (playerInfo.Key, playerInfo.Value.transform.position).PutBytes (bitBuffer);
             }
+			bitBuffer.Flip ();
+			_channel.SendAll(bitBuffer.GetByteArray(), false);
+
+			bitBuffer.Clear ();
             foreach(KeyValuePair<int, AutoAttack> autoInfo in _autoAttacks) {
-                _channel.SendAll(new MovementResponse(autoInfo.Key, autoInfo.Value.transform.position), false);
+				new MovementResponse(autoInfo.Key, autoInfo.Value.transform.position).PutBytes(bitBuffer);
             }
+			bitBuffer.Flip ();
+			_channel.SendAll(bitBuffer.GetByteArray(), false);
+
         } else {
             Packet packet = _channel.GetPacket();
+			BitBuffer bitBuffer = new BitBuffer ();
             while (packet != null) {
-                byte[] bytes = packet.getData();
-                ServerResponse response = ServerResponse.fromBytes(bytes);
+				byte[] a = packet.getData();
+				Debug.Log ("response size " + a.Length);
+				for(int i =0; i< a.Length; i++){
+					Debug.Log("array elem["+i+"]: "+a[i]+"      "+System.DateTime.Now.Millisecond);
+				}
+				bitBuffer.PutBytes(packet.getData());
+				bitBuffer.Flip ();
+				ServerResponse response = ServerResponse.fromBytes(bitBuffer);
                 switch (response.GetResponseType()) {
                 case ResponseType.POSITIONS: {
                         MovementResponse movementResponse = (MovementResponse)response;
@@ -113,8 +130,8 @@ public class GameController : MonoBehaviour {
                         break;
                     }
                 }
-
                 packet = _channel.GetPacket();
+				bitBuffer.Clear ();
             }
         }
     }

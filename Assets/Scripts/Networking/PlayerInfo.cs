@@ -20,16 +20,14 @@ public class PlayerInfo : Byteable {
 		_positionInfo = new PositionInfo(position);
 	}
 
-	public byte[] toBytes(){
-		BitBuffer bitBuffer = new BitBuffer ();
-		bitBuffer.WriteByte ((byte)_id);
-		bitBuffer.WriteBytes (_positionInfo.toBytes ());
-		return bitBuffer.Read ();
+	public void PutBytes(BitBuffer bitBuffer){
+		bitBuffer.PutByte ((byte)_id);
+		_positionInfo.PutBytes (bitBuffer);
 	}
 
-	public static PlayerInfo fromBytes(byte[] data, int offset){
-		int id = data [offset];
-		PositionInfo positionInfo = PositionInfo.fromBytes (data, offset + 1);
+	public static PlayerInfo fromBytes(BitBuffer bitBuffer){
+		int id = bitBuffer.GetByte();
+		PositionInfo positionInfo = PositionInfo.fromBytes (bitBuffer);
 		return new PlayerInfo (id, positionInfo);
 	}
 

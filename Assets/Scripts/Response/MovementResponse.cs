@@ -17,8 +17,9 @@ public class MovementResponse : ServerResponse {
         _positionInfo = positionInfo;
     }
 
-    public static MovementResponse FromBytes(byte[] data, int offset) {
-        return new MovementResponse(data[offset], PositionInfo.fromBytes(data, offset+1));
+	public static MovementResponse FromBytes(BitBuffer bitBuffer) {
+		int id = bitBuffer.GetByte ();
+		return new MovementResponse(id, PositionInfo.fromBytes(bitBuffer));
     }
 
     public int GetId() {
@@ -29,11 +30,9 @@ public class MovementResponse : ServerResponse {
         return _positionInfo.GetPosition();
     }
 
-    protected override byte[] ExtraBytes() {
-        BitBuffer bitBuffer = new BitBuffer();
-        bitBuffer.WriteByte((byte)_id);
-        bitBuffer.WriteBytes(_positionInfo.toBytes());
-        return bitBuffer.Read();
+	protected override void PutExtraBytes(BitBuffer bitBuffer) {
+        bitBuffer.PutByte((byte)_id);
+		_positionInfo.PutBytes(bitBuffer);
     }
 
     public override ResponseType GetResponseType() {

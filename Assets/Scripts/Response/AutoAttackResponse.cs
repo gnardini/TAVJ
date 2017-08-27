@@ -17,8 +17,9 @@ public class AutoAttackResponse : ServerResponse {
         _targetPosition = positionInfo;
     }
 
-    public static AutoAttackResponse FromBytes(byte[] data, int offset) {
-        return new AutoAttackResponse(data[offset], PositionInfo.fromBytes(data, offset+1));
+	public static AutoAttackResponse FromBytes(BitBuffer bitBuffer) {
+		int id = bitBuffer.GetByte ();
+		return new AutoAttackResponse(id, PositionInfo.fromBytes(bitBuffer));
     }
 
     public int GetId() {
@@ -29,11 +30,9 @@ public class AutoAttackResponse : ServerResponse {
         return _targetPosition.GetPosition();
     }
 
-    protected override byte[] ExtraBytes() {
-        BitBuffer bitBuffer = new BitBuffer();
-        bitBuffer.WriteByte((byte)_id);
-        bitBuffer.WriteBytes(_targetPosition.toBytes());
-        return bitBuffer.Read();
+	protected override void PutExtraBytes(BitBuffer bitBuffer) {
+        bitBuffer.PutByte((byte)_id);
+		_targetPosition.PutBytes(bitBuffer);
     }
 
     public override ResponseType GetResponseType() {
