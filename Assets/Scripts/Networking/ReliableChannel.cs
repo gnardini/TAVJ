@@ -10,13 +10,17 @@ public class ReliableChannel : Channel {
 	private const int ACK = 254;
 	private const int NON_RELIABLE = 255;
 
+	private const int MS_TO_DELETE_RELIABLE_MESSAGES = 10000;
+
 	private Dictionary<IPEndPoint, byte> _reliableSeqNumber;
 	private Channel _channel;
 	private Dictionary<IPEndPoint , Dictionary<byte, byte[]>> _reliableMessages; 
+	private Dictionary<IPEndPoint , long[]> _messagesReceived;
 
 	public ReliableChannel(int port) : base(port){
 		_reliableMessages = new Dictionary<IPEndPoint , Dictionary<byte, byte[]>> ();
 		_reliableSeqNumber = new Dictionary<IPEndPoint, byte> ();
+		_messagesReceived = new Dictionary<IPEndPoint , long[]> ();
 	}
 
 
@@ -40,7 +44,7 @@ public class ReliableChannel : Channel {
 			byte[] data = packet.getData ();
 			int header = data [0];
 			switch (header) {
-			case ACK:{
+			case ACK:{;
 					lock (_reliableMessages) {
 						_reliableMessages [packet.getAddress ()].Remove (data [1]);
 					}
@@ -51,7 +55,15 @@ public class ReliableChannel : Channel {
 				}
 			default:{
 					Send(PrepareToSend(ACK, new byte[]{data[0]}), packet.getAddress());
-					return new Packet (CreateCopy (data, 1), packet.getAddress ());
+					if (!_messagesReceived.ContainsKey (packet.getAddress ())) {
+						_messagesReceived.Add (packet.getAddress (), new long[254]);
+					}
+					long currentTime = CurrentTimeMillis();
+					if (currentTime - MS_TO_DELETE_RELIABLE_MESSAGES > _messagesReceived [packet.getAddress ()] [data [0]]) {
+						_messagesReceived [packet.getAddress ()] [data [0]] = currentTime;
+						return new Packet (CreateCopy (data, 1), packet.getAddress ());	
+					}
+					break;
 				}
 			}
 			packet = base.GetPacket ();
@@ -125,5 +137,13 @@ public class ReliableChannel : Channel {
 
 	public void SendAllExcluding(Byteable data, IPEndPoint ip, bool reliable){
 		SendAllExcluding (data.toBytes(), ip, reliable);
+	}
+
+	private static readonly DateTime Jan1st1970 = new DateTime
+		(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+	public static long CurrentTimeMillis()
+	{
+		return (long) (DateTime.UtcNow - Jan1st1970).TotalMilliseconds;
 	}
 }
