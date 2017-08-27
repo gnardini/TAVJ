@@ -61,6 +61,7 @@ public class GameController : MonoBehaviour {
             foreach(KeyValuePair<int, Player> playerInfo in _players) {
                 _channel.SendAll(new MovementResponse(playerInfo.Key, playerInfo.Value.transform.position), false);
             }
+			RemoveDeadAutoAttacks();
             foreach(KeyValuePair<int, AutoAttack> autoInfo in _autoAttacks) {
                 _channel.SendAll(new MovementResponse(autoInfo.Key, autoInfo.Value.transform.position), false);
             }
@@ -126,6 +127,16 @@ public class GameController : MonoBehaviour {
 		}
 		return player;
     }
+
+	void RemoveDeadAutoAttacks() {
+		Dictionary<int, AutoAttack> autoAttacks = new Dictionary<int, AutoAttack>();
+		foreach(KeyValuePair<int, AutoAttack> autoInfo in _autoAttacks) {
+			if (autoInfo.Value != null) {
+				autoAttacks.Add(autoInfo.Key, autoInfo.Value);
+			}
+		}
+		_autoAttacks = autoAttacks;
+	}
 
 	void OnDestroy() {
 		_channel.Destroy();   

@@ -14,14 +14,12 @@ public class Player : MonoBehaviour {
 
 	protected GameObject _targetPositionSign;
 
-    private Vector3 _targetPosition;
     private Rigidbody _rigidBody;
     private HealthBar _healthBar;
     private float _healthLeft;
     private UpdateLoop _updateLoop;
 
 	void Start () {
-        _targetPosition = transform.position;
         Vector3 startPosition = new Vector3(transform.position.x, 0.01f, transform.position.z);
         _targetPositionSign = Instantiate(targetPositionPrefab, startPosition, Quaternion.identity).gameObject;
         _targetPositionSign.SetActive(false);
@@ -52,7 +50,6 @@ public class Player : MonoBehaviour {
     }
 
     public void SetTargetPosition(Vector3 position) {
-		_targetPosition = position;
         _updateLoop.SetTargetPosition(position);
     }
 
