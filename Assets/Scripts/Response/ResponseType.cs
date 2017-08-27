@@ -4,7 +4,7 @@ using UnityEngine;
 
 public enum ResponseType : byte {
 
-    POSITIONS,
+    PLAYER_UPDATE,
     NEW_PLAYER,
     AUTOATTACK,
 	PLAYER_INFO_BROADCAST

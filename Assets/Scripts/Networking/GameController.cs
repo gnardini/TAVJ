@@ -50,20 +50,26 @@ public class GameController : MonoBehaviour {
                     _autoAttacks.Add(_lastId, autoAttack);
                     _channel.SendAll(new AutoAttackResponse(auto.GetId(), auto.GetTargetPosition()), false);
                     break;
-                case InputType.START_GAME:
-                    _lastId++;
-                    Vector3 startPosition = new Vector3 (2f, 1.2f, 0f);
-                    Player player = CreateServerPlayer(new PlayerInfo(_lastId, startPosition));
-                    _players.Add (_lastId, player);
-                    _channel.Send (new PlayerInfoBroadcast (_lastId, _players), packet.getAddress(), true);
-                    _channel.SendAllExcluding(new NewPlayerEvent(_lastId, startPosition), packet.getAddress(), true);
+				case InputType.START_GAME:
+					_lastId++;
+					Vector3 startPosition = new Vector3(2f, 1.2f, 0f);
+					Player player = CreateServerPlayer(new PlayerInfo(_lastId, startPosition));
+					_players.Add(_lastId, player);
+					_channel.Send(new PlayerInfoBroadcast(_lastId, _players), packet.getAddress(), true);
+					PlayerInfo playerInfo = new PlayerInfo(_lastId, player.GetHealth(), new PositionInfo(startPosition));
+					_channel.SendAllExcluding(new NewPlayerEvent(playerInfo), packet.getAddress(), true);
                     break;
                 }
                 packet = _channel.GetPacket();
 				bitBuffer.Clear ();
             }
-            foreach(KeyValuePair<int, Player> playerInfo in _players) {
-				_channel.SendAll(new MovementResponse(playerInfo.Key, playerInfo.Value.transform.position), false);
+            foreach(KeyValuePair<int, Player> playerInfoPair in _players) {
+				Vector3 position = playerInfoPair.Value.transform.position;
+				PlayerInfo playerInfo = new PlayerInfo(
+					playerInfoPair.Key, 
+					playerInfoPair.Value.GetHealth(), 
+					new PositionInfo(position));
+				_channel.SendAll(new PlayerInfoUpdate(playerInfo), false);
 //				new MovementResponse (playerInfo.Key, playerInfo.Value.transform.position).PutBytes (bitBuffer);
             }
 //			bitBuffer.Flip ();
@@ -72,7 +78,10 @@ public class GameController : MonoBehaviour {
 //			bitBuffer.Clear ();
 			RemoveDeadAutoAttacks();
             foreach(KeyValuePair<int, AutoAttack> autoInfo in _autoAttacks) {
-				_channel.SendAll(new MovementResponse(autoInfo.Key, autoInfo.Value.transform.position), false);
+				// TODO FIX
+				Vector3 position = autoInfo.Value.transform.position;
+				PlayerInfo playerInfo = new PlayerInfo(autoInfo.Key, 0, new PositionInfo(position));
+				_channel.SendAll(new PlayerInfoUpdate(playerInfo), false);
 //				new MovementResponse(autoInfo.Key, autoInfo.Value.transform.position).PutBytes(bitBuffer);
             }
 //			bitBuffer.Flip ();
@@ -86,12 +95,14 @@ public class GameController : MonoBehaviour {
 				bitBuffer.Flip ();
 				ServerResponse response = ServerResponse.fromBytes(bitBuffer);
                 switch (response.GetResponseType()) {
-                case ResponseType.POSITIONS: {
-                        MovementResponse movementResponse = (MovementResponse)response;
-                        if(_players.ContainsKey(movementResponse.GetId ())){
-							_players [movementResponse.GetId ()].SetTargetPosition(movementResponse.GetPosition ());
-                        } else if (_autoAttacks.ContainsKey(movementResponse.GetId())) {
-                            _autoAttacks[movementResponse.GetId()].MoveTo(movementResponse.GetPosition());
+                case ResponseType.PLAYER_UPDATE: {
+						PlayerInfoUpdate playerUpdate = (PlayerInfoUpdate)response;
+						PlayerInfo playerInfo = playerUpdate.GetPlayerInfo();
+						if(_players.ContainsKey(playerInfo.GetId ())){
+							_players [playerInfo.GetId ()].SetTargetPosition(playerInfo.GetPosition ());
+							_players [playerInfo.GetId ()].SetHealth(playerInfo.GetHealth ());
+						} else if (_autoAttacks.ContainsKey(playerInfo.GetId())) {
+							_autoAttacks[playerInfo.GetId()].MoveTo(playerInfo.GetPosition());
                         }
 						break;
 					}
@@ -146,6 +157,7 @@ public class GameController : MonoBehaviour {
 	private Player InstantiatePlayer(PlayerInfo playerInfo) {
 		Player player = Instantiate(playerPrefab, playerInfo.GetPosition(), Quaternion.identity).gameObject.GetComponent<Player>();
 		player.SetId(playerInfo.GetId());
+		player.SetHealth(playerInfo.GetHealth());
 		return player;
 	}
 

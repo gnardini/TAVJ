@@ -10,17 +10,16 @@ public class NewPlayerEvent : ServerResponse {
 		_playerInfo = playerInfo;
     }
 
-	public NewPlayerEvent(int id, Vector3 position) {
-		_playerInfo = new PlayerInfo (id, new PositionInfo(position));
-	}
-
-    public NewPlayerEvent(int id, PositionInfo positionInfo) {
-		_playerInfo = new PlayerInfo (id, positionInfo);
-    }
+//	public NewPlayerEvent(int id, Vector3 position) {
+//		_playerInfo = new PlayerInfo (id, new PositionInfo(position));
+//	}
+//
+//    public NewPlayerEvent(int id, int health, PositionInfo positionInfo) {
+//		_playerInfo = new PlayerInfo (id, positionInfo);
+//    }
 
 	public static NewPlayerEvent FromBytes(BitBuffer bitBuffer) {
-		int id = bitBuffer.GetByte ();
-		return new NewPlayerEvent(id, PositionInfo.fromBytes(bitBuffer));
+		return new NewPlayerEvent(PlayerInfo.FromBytes(bitBuffer));
     }
 
     public PlayerInfo GetPlayerInfo() {

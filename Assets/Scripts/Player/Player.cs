@@ -10,14 +10,14 @@ public class Player : MonoBehaviour {
     public Transform autoAttackPrefab;
     public float moveSpeed;
     public float autoAttackCooldown;
-    public float maxHealth;
+    public int maxHealth;
 
 	protected GameObject _targetPositionSign;
 
     private Rigidbody _rigidBody;
     private HealthBar _healthBar;
 	private int _id;
-    private float _healthLeft;
+    private int _healthLeft;
     private UpdateLoop _updateLoop;
 
 	void Start () {
@@ -61,6 +61,14 @@ public class Player : MonoBehaviour {
     public void SetTargetPosition(Vector3 position) {
         _updateLoop.SetTargetPosition(position);
     }
+
+	public int GetHealth() {
+		return _healthLeft;
+	}
+
+	public void SetHealth(int health) {
+		_healthLeft = health;
+	}
 
 	public void DoDamage(int damage) {
 		_healthLeft -= damage;

@@ -26,7 +26,7 @@ public class PlayerInfoBroadcast : ServerResponse {
 		int count = bitBuffer.GetByte();
 		List<PlayerInfo> list = new List<PlayerInfo> ();
 		for (int i = 0; i < count; i++) {
-			PlayerInfo playerInfo = PlayerInfo.fromBytes (bitBuffer);
+			PlayerInfo playerInfo = PlayerInfo.FromBytes (bitBuffer);
 			list.Add (playerInfo);
 		}
 		return new PlayerInfoBroadcast (id, list);

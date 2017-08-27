@@ -5,13 +5,15 @@ using UnityEngine;
 public class PlayerInfo : Byteable {
 
 	private int _id;
+	private int _health;
 	private PositionInfo _positionInfo;
 
-	public PlayerInfo(int id, Player player) : this(id, new PositionInfo(player.transform.position)){
+	public PlayerInfo(int id, Player player) : this(id, player.GetHealth(), new PositionInfo(player.transform.position)){
 	}
 
-	public PlayerInfo(int id, PositionInfo positionInfo) {
+	public PlayerInfo(int id, int health, PositionInfo positionInfo) {
 		_id = id;
+		_health = health;
 		_positionInfo = positionInfo;
 	}
 
@@ -22,17 +24,23 @@ public class PlayerInfo : Byteable {
 
 	public void PutBytes(BitBuffer bitBuffer){
 		bitBuffer.PutByte ((byte)_id);
+		bitBuffer.PutByte((byte)_health);
 		_positionInfo.PutBytes (bitBuffer);
 	}
 
-	public static PlayerInfo fromBytes(BitBuffer bitBuffer){
+	public static PlayerInfo FromBytes(BitBuffer bitBuffer){
 		int id = bitBuffer.GetByte();
+		int health = bitBuffer.GetByte();
 		PositionInfo positionInfo = PositionInfo.fromBytes (bitBuffer);
-		return new PlayerInfo (id, positionInfo);
+		return new PlayerInfo (id, health, positionInfo);
 	}
 
 	public int GetId(){
 		return _id;
+	}
+
+	public int GetHealth() {
+		return _health;
 	}
 
 	public Vector3 GetPosition(){
