@@ -49,9 +49,6 @@ public class Player : MonoBehaviour {
 
     public void MoveTo(Vector3 position) {
 		_rigidBody.MovePosition(position);
-        if ((_targetPosition - transform.position).magnitude < 0.1) {
-            _targetPositionSign.SetActive(false);
-        }
     }
 
     public void SetTargetPosition(Vector3 position) {
@@ -70,6 +67,10 @@ public class Player : MonoBehaviour {
 		_targetPositionSign.transform.position = 
 			new Vector3(position.x, _targetPositionSign.transform.position.y, position.z);
 		_targetPositionSign.SetActive(true);
+	}
+
+	public void HideTargetSign() {
+		_targetPositionSign.SetActive(false);
 	}
 
 }

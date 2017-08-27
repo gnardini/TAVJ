@@ -8,19 +8,23 @@ public class LocalPlayerUpdateLoop : MovementUpdateLoop {
 
 	private int _id;
 	private float _autoAttackCooldownRemaining;
+	private Vector3 _targetSignPosition;
 
 	public LocalPlayerUpdateLoop(Player player, GameController gameController, int id) : base(player) {
 		_gameController = gameController;
 		_id = id;
 		_autoAttackCooldownRemaining = player.autoAttackCooldown;
 		player.transform.GetChild(1).gameObject.SetActive(true);
-
+		_targetSignPosition = _player.transform.position;
 	}
 
 	override public void Update() {
 		base.Update();
         SendMovement();
         SendAbilities();
+		if ((_targetSignPosition - _player.transform.position).magnitude < 0.15f) {
+			_player.HideTargetSign();
+		}
 	}
 
 	void SendMovement() {
@@ -30,6 +34,8 @@ public class LocalPlayerUpdateLoop : MovementUpdateLoop {
 			if (Physics.Raycast(ray, out hit)) {
 				Vector3 targetPosition = hit.point;
 				targetPosition.y = _player.transform.position.y;
+				_targetSignPosition = targetPosition;
+				_player.SetTargetSign(targetPosition);
 				_gameController.SendBroadcast(new MovementInput(_id, new PositionInfo(targetPosition)), true);
 			}
 		}
