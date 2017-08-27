@@ -92,7 +92,7 @@ public class Player : MonoBehaviour {
                 _autoAttackCooldownRemaining = autoAttackCooldown;
                 Vector3 targetPosition = hit.point;
                 targetPosition.y = transform.position.y;
-                _gameController.SendBroadcast(new AutoAttackInput(_id, targetPosition));
+                _gameController.SendBroadcast(new AutoAttackInput(_id, targetPosition), true);
             }
         }
     }

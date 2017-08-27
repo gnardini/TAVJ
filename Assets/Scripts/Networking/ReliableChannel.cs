@@ -9,14 +9,14 @@ public class ReliableChannel : Channel {
 
 	private const int ACK = 254;
 	private const int NON_RELIABLE = 255;
-	private int _reliableSeqNumber;
 
+	private Dictionary<IPEndPoint, byte> _reliableSeqNumber;
 	private Channel _channel;
 	private Dictionary<IPEndPoint , Dictionary<byte, byte[]>> _reliableMessages; 
 
 	public ReliableChannel(int port) : base(port){
 		_reliableMessages = new Dictionary<IPEndPoint , Dictionary<byte, byte[]>> ();
-		_reliableSeqNumber = 0;
+		_reliableSeqNumber = new Dictionary<IPEndPoint, byte> ();
 	}
 
 
@@ -41,7 +41,6 @@ public class ReliableChannel : Channel {
 			int header = data [0];
 			switch (header) {
 			case ACK:{
-					Debug.Log ("Ack received");
 					lock (_reliableMessages) {
 						_reliableMessages [packet.getAddress ()].Remove (data [1]);
 					}
@@ -51,7 +50,6 @@ public class ReliableChannel : Channel {
 					return new Packet (CreateCopy (data, 1), packet.getAddress ());
 				}
 			default:{
-					Debug.Log ("Reliable received "+data[0]);
 					Send(PrepareToSend(ACK, new byte[]{data[0]}), packet.getAddress());
 					return new Packet (CreateCopy (data, 1), packet.getAddress ());
 				}
@@ -61,9 +59,12 @@ public class ReliableChannel : Channel {
 		return null;
 	}
 
-	public byte GetNextReliableSeqNumber(){
-		int aux = _reliableSeqNumber;
-		_reliableSeqNumber=(_reliableSeqNumber+1)%254;
+	public byte GetNextReliableSeqNumber(IPEndPoint ip){
+		if (!_reliableSeqNumber.ContainsKey (ip)) {
+			_reliableSeqNumber.Add (ip, 0);
+		}
+		int aux = _reliableSeqNumber[ip];
+		_reliableSeqNumber[ip]=(byte)((aux+1)%254);
 		return (byte)aux;
 	}
 
@@ -74,16 +75,16 @@ public class ReliableChannel : Channel {
 	}
 
 
-	public byte[] PrepareToSend(int messageType, byte[] data){
+	private byte[] PrepareToSend(int messageType, byte[] data){
 		BitBuffer bitBuffer = new BitBuffer ();
 		bitBuffer.WriteByte ((byte)messageType);
 		bitBuffer.WriteBytes (data);
 		return bitBuffer.Read ();
 	}
 
-	public void Send(byte[] data, IPEndPoint ip, bool reliable){
+	private byte[] PrepareToSend(byte[] data, IPEndPoint ip, bool reliable){
 		if (reliable) {
-			byte nextSeqNumber = GetNextReliableSeqNumber ();
+			byte nextSeqNumber = GetNextReliableSeqNumber (ip);
 			data = PrepareToSend (nextSeqNumber, data);
 			lock (_reliableMessages) {
 				if (!_reliableMessages.ContainsKey (ip)) {
@@ -94,7 +95,11 @@ public class ReliableChannel : Channel {
 		} else {
 			data = PrepareToSend (NON_RELIABLE, data);
 		}
-		base.Send(data, ip);
+		return data;
+	}
+
+	public void Send(byte[] data, IPEndPoint ip, bool reliable){
+		base.Send(PrepareToSend (data, ip, reliable), ip);
 	}
 
 	public void Send(Byteable data, IPEndPoint ip, bool reliable){
