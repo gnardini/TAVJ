@@ -36,7 +36,7 @@ public class Player : MonoBehaviour {
     virtual protected void Update () {
         _updateLoop.Update();
         FixPosition();
-        _healthBar.SetHealthPercent(_healthLeft / maxHealth);
+		_healthBar.SetHealthPercent(_healthLeft / (float) maxHealth);
     }
 
 	public void SetId(int id) {

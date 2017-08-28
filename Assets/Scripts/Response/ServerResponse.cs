@@ -15,6 +15,8 @@ public abstract class ServerResponse : Byteable {
 			return NewPlayerEvent.FromBytes(bitBuffer);
 		case ResponseType.PLAYER_INFO_BROADCAST:
 			return PlayerInfoBroadcast.FromBytes (bitBuffer);
+		case ResponseType.RESPONSES_CONTAINER:
+			return ResponsesContainer.FromBytes(bitBuffer);
         }
 
         return null;
