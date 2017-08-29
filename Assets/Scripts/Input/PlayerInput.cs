@@ -16,8 +16,8 @@ public abstract class PlayerInput : Byteable {
 		switch (type) {
         case InputType.MOVEMENT:
 			return MovementInput.FromBytes(id, bitBuffer);
-        case InputType.AUTOATTACK:
-			return AutoAttackInput.FromBytes(id, bitBuffer);
+        case InputType.ABILITY:
+			return AbilityInput.FromBytes(id, bitBuffer);
         case InputType.START_GAME:
 			return GameStartInput.FromBytes(id, bitBuffer);
         }

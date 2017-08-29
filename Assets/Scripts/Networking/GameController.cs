@@ -8,13 +8,14 @@ public abstract class GameController : MonoBehaviour {
     public Transform playerPrefab;
     public Transform autoAttackPrefab;
 
-	protected const string SERVER_HOST = "192.168.0.18";// "181.26.156.227"; //
+	protected const string SERVER_HOST = "127.0.0.1";//"192.168.0.18";// "181.26.156.227"; //
     protected const int PORT = 5500;
 
 	protected ReliableChannel _channel;
 	protected Dictionary<int, Player> _players;
 	protected Dictionary<int, AutoAttack> _autoAttacks;
-	protected int _lastId = 0;
+	protected int _lastPlayerId = 0;
+	protected int _lastAbilityId = 0;
 	protected int _localId;
 
     virtual protected void Start () {
@@ -24,6 +25,7 @@ public abstract class GameController : MonoBehaviour {
     }
 
 	virtual protected void Update () {
+		RemoveDeadAutoAttacks();
 		Packet packet = _channel.GetPacket();
 		while (packet != null) {
 			HandlePacket(packet);

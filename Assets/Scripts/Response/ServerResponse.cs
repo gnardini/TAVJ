@@ -9,8 +9,8 @@ public abstract class ServerResponse : Byteable {
 		switch (type) {
         case ResponseType.PLAYER_UPDATE:
 			return PlayerInfoUpdate.FromBytes(bitBuffer);
-        case ResponseType.AUTOATTACK:
-			return AutoAttackResponse.FromBytes(bitBuffer);
+        case ResponseType.ABILITY:
+			return AbilityResponse.FromBytes(bitBuffer);
         case ResponseType.NEW_PLAYER:
 			return NewPlayerEvent.FromBytes(bitBuffer);
 		case ResponseType.PLAYER_INFO_BROADCAST:

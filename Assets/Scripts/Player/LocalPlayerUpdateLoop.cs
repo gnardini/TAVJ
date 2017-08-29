@@ -50,7 +50,15 @@ public class LocalPlayerUpdateLoop : MovementUpdateLoop {
 				_autoAttackCooldownRemaining = _player.autoAttackCooldown;
 				Vector3 targetPosition = hit.point;
 				targetPosition.y = _player.transform.position.y;
-				_gameController.SendBroadcast(new AutoAttackInput(_id, targetPosition), true);
+				_gameController.SendBroadcast(new AbilityInput(_id, AbilityType.AUTOATTACK, targetPosition), true);
+			}
+		}
+		if (Input.GetKeyUp(KeyCode.W)) {
+			RaycastHit hit;
+			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+			if (Physics.Raycast(ray, out hit)) {
+				Vector3 targetPosition = hit.point;
+				_gameController.SendBroadcast(new AbilityInput(_id, AbilityType.FREEZE, targetPosition), true);
 			}
 		}
 	}

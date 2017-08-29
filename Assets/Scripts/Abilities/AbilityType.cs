@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum InputType : byte {
+public enum AbilityType : byte {
 
-    START_GAME,
-	MOVEMENT,
-    ABILITY
+	AUTOATTACK,
+	FREEZE
 
 }

@@ -6,7 +6,7 @@ public enum ResponseType : byte {
 
     PLAYER_UPDATE,
     NEW_PLAYER,
-    AUTOATTACK,
+    ABILITY,
 	PLAYER_INFO_BROADCAST,
 	RESPONSES_CONTAINER
 

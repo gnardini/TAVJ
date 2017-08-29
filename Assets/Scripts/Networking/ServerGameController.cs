@@ -11,7 +11,6 @@ public class ServerGameController : GameController {
 	override protected void Update () {
 		base.Update();
 		BitBuffer bitBuffer = new BitBuffer();
-		RemoveDeadAutoAttacks();
 		int totalUpdates = _players.Count + _autoAttacks.Count;
 		bitBuffer.PutByte((byte)totalUpdates);
 		foreach(KeyValuePair<int, Player> playerInfoPair in _players) {
@@ -41,20 +40,27 @@ public class ServerGameController : GameController {
 		case InputType.MOVEMENT:
 			_players[input.GetId()].SetTargetPosition(((MovementInput)input).GetPosition());   
 			break;
-		case InputType.AUTOATTACK:
-			AutoAttackInput auto = (AutoAttackInput)input;
-			AutoAttack autoAttack = _players[auto.GetId()].SpawnAutoAttack(auto.GetTargetPosition());
-			_lastId++;
-			_autoAttacks.Add(_lastId, autoAttack);
-			_channel.SendAll(new AutoAttackResponse(auto.GetId(), auto.GetTargetPosition()), false);
+		case InputType.ABILITY:
+			AbilityInput ability = (AbilityInput)input;
+			switch (ability.GetAbilityType()) {
+			case AbilityType.AUTOATTACK:
+				AutoAttack autoAttack = _players[ability.GetId()].SpawnAutoAttack(ability.GetTargetPosition());
+				_lastAbilityId = (_lastAbilityId + 1) % 255;
+				_autoAttacks.Add(_lastAbilityId, autoAttack);
+				break;
+			case AbilityType.FREEZE:
+				_players[ability.GetId()].SpawnFreeze(ability.GetTargetPosition());
+				break;
+			}
+			_channel.SendAll(new AbilityResponse(ability), true);
 			break;
 		case InputType.START_GAME:
-			_lastId++;
+			_lastPlayerId++;
 			Vector3 startPosition = new Vector3(2f, 1.2f, 0f);
-			Player player = CreateServerPlayer(new PlayerInfo(_lastId, startPosition));
-			_players.Add(_lastId, player);
-			_channel.Send(new PlayerInfoBroadcast(_lastId, _players), packet.getAddress(), true);
-			PlayerInfo playerInfo = new PlayerInfo(_lastId, player.GetHealth(), new PositionInfo(startPosition));
+			Player player = CreateServerPlayer(new PlayerInfo(_lastPlayerId, startPosition));
+			_players.Add(_lastPlayerId, player);
+			_channel.Send(new PlayerInfoBroadcast(_lastPlayerId, _players), packet.getAddress(), true);
+			PlayerInfo playerInfo = new PlayerInfo(_lastPlayerId, player.GetHealth(), new PositionInfo(startPosition));
 			_channel.SendAllExcluding(new NewPlayerEvent(playerInfo), packet.getAddress(), true);
 			break;
 		}

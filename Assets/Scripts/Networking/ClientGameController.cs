@@ -37,9 +37,16 @@ public class ClientGameController : GameController {
 				}
 				break;
 			}
-		case ResponseType.AUTOATTACK: {
-				AutoAttackResponse auto = (AutoAttackResponse)response;
-				_players [auto.GetId ()].SpawnAutoAttack (auto.GetPosition ());
+		case ResponseType.ABILITY: {
+				AbilityResponse auto = (AbilityResponse)response;
+				switch(auto.GetAbilityType()) {
+				case AbilityType.AUTOATTACK:
+					_players [auto.GetId ()].SpawnAutoAttack(auto.GetPosition ());
+					break;
+				case AbilityType.FREEZE:
+					_players[auto.GetId()].SpawnFreeze(auto.GetPosition());
+					break;
+				}
 				break;
 			}
 		case ResponseType.NEW_PLAYER: {

@@ -8,6 +8,7 @@ public class Player : MonoBehaviour {
     
     public Transform targetPositionPrefab;
     public Transform autoAttackPrefab;
+	public Transform freezePrefab;
     public float moveSpeed;
     public float autoAttackCooldown;
     public int maxHealth;
@@ -18,6 +19,7 @@ public class Player : MonoBehaviour {
     private HealthBar _healthBar;
 	private int _id;
     private int _healthLeft;
+	private float _speedMultiplier;
     private UpdateLoop _updateLoop;
 
 	void Start () {
@@ -27,6 +29,7 @@ public class Player : MonoBehaviour {
         _rigidBody = GetComponentInParent<Rigidbody>();
         _healthBar = GetComponentInChildren<HealthBar>();
         _healthLeft = maxHealth;
+		_speedMultiplier = 1f;
     }
 
     public void SetUpdateLoop(UpdateLoop updateLoop) {
@@ -47,6 +50,14 @@ public class Player : MonoBehaviour {
 		return _id;
 	}
 
+	public void SetSpeedMultiplier(float multiplier) {
+		_speedMultiplier = multiplier;
+	}
+
+	public float GetMoveSpeed() {
+		return moveSpeed * _speedMultiplier;
+	}
+
     void FixPosition() {
         transform.position = new Vector3(transform.position.x, 1.2f, transform.position.z);
         transform.rotation = Quaternion.identity;
@@ -55,7 +66,8 @@ public class Player : MonoBehaviour {
     }
 
     public void MoveTo(Vector3 position) {
-		_rigidBody.MovePosition(position);
+		transform.position = position;
+//		_rigidBody.MovePosition(position);
     }
 
     public void SetTargetPosition(Vector3 position) {
@@ -85,6 +97,12 @@ public class Player : MonoBehaviour {
 		auto.SetOwnerId(_id);
 		return auto;
     }
+
+	public Freeze SpawnFreeze(Vector3 targetPosition) {
+		Freeze freeze = Instantiate(freezePrefab, targetPosition, Quaternion.identity).GetComponent<Freeze>();
+		freeze.SetOwnerId(_id);
+		return freeze;	
+	}
 
 	public void SetTargetSign(Vector3 position) {
 		_targetPositionSign.transform.position = 
