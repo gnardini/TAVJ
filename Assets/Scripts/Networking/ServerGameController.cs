@@ -21,12 +21,12 @@ public class ServerGameController : GameController {
 				new PositionInfo(position));
 			new PlayerInfoUpdate(playerInfo).PutBytes(bitBuffer);
 		}
-		foreach(KeyValuePair<int, AutoAttack> autoInfo in _autoAttacks) {
-			// TODO FIX
-			Vector3 position = autoInfo.Value.transform.position;
-			PlayerInfo playerInfo = new PlayerInfo(autoInfo.Key, 0, new PositionInfo(position));
-			new PlayerInfoUpdate(playerInfo).PutBytes(bitBuffer);
-		}
+//		foreach(KeyValuePair<int, AutoAttack> autoInfo in _autoAttacks) {
+//			// TODO FIX
+//			Vector3 position = autoInfo.Value.transform.position;
+//			PlayerInfo playerInfo = new PlayerInfo(autoInfo.Key, 0, new PositionInfo(position));
+//			new PlayerInfoUpdate(playerInfo).PutBytes(bitBuffer);
+//		}
 		bitBuffer.Flip ();
 		_channel.SendAll(new ResponsesContainer(bitBuffer.GetByteArray()), false);
 	}

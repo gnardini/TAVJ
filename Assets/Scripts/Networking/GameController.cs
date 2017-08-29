@@ -6,7 +6,6 @@ using UnityEngine;
 public abstract class GameController : MonoBehaviour {
 
     public Transform playerPrefab;
-    public Transform autoAttackPrefab;
 
 	protected const string SERVER_HOST = "181.26.170.150";//"192.168.0.18";
     protected const int PORT = 5500;
