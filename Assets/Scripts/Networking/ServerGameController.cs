@@ -49,6 +49,7 @@ public class ServerGameController : GameController {
 				break;
 			case AbilityType.FLASH:
 				_players[ability.GetId()].MoveTo(ability.GetTargetPosition());
+				_players[ability.GetId()].CancelMovement();
 				break;
 			case AbilityType.EXPLOSION:
 				CreateExplosion(ability.GetTargetPosition());

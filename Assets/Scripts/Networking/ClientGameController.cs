@@ -46,6 +46,7 @@ public class ClientGameController : GameController {
 					break;
 				case AbilityType.FLASH:
 					_players[auto.GetId()].MoveTo(auto.GetPosition());
+					_players[auto.GetId()].CancelMovement();
 					break;
 				case AbilityType.EXPLOSION:
 					CreateExplosion(auto.GetPosition());

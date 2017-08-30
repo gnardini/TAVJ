@@ -3,16 +3,25 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using UnityEngine;
+using System;
 
 public class Player : MonoBehaviour {
+
+	[Serializable]
+	public class AbilityInfo {
+		public float cooldown;
+		public float range;
+		public KeyCode keyCode;
+	}
     
     public Transform targetPositionPrefab;
     public Transform autoAttackPrefab;
 	public Transform freezePrefab;
+	public Transform rangeHelper;
     public float moveSpeed;
-    public float autoAttackCooldown;
-	public float freezeCooldown;
-	public float flashCooldown;
+	public AbilityInfo autoAttackInfo;
+	public AbilityInfo freezeInfo;
+	public AbilityInfo flashInfo;
     public int maxHealth;
 
 	protected GameObject _targetPositionSign;
@@ -60,6 +69,13 @@ public class Player : MonoBehaviour {
 		return moveSpeed * _speedMultiplier;
 	}
 
+	public void SetRangeHelperScale(float scale) {
+		Vector3 rangeHelperScale = rangeHelper.localScale;
+		rangeHelperScale.x = scale;
+		rangeHelperScale.z = scale;
+		rangeHelper.localScale = rangeHelperScale;
+	}
+
     void FixPosition() {
         transform.position = new Vector3(transform.position.x, 1.2f, transform.position.z);
         transform.rotation = Quaternion.identity;
@@ -71,6 +87,11 @@ public class Player : MonoBehaviour {
 		transform.position = position;
 //		_rigidBody.MovePosition(position);
     }
+
+	public void CancelMovement() {
+		_updateLoop.CancelMovement();
+		HideTargetSign();
+	}
 
     public void SetTargetPosition(Vector3 position) {
         _updateLoop.SetTargetPosition(position);

@@ -7,4 +7,6 @@ public interface UpdateLoop {
     void Update();
 
 	void SetTargetPosition(Vector3 position);
+
+	void CancelMovement();
 }

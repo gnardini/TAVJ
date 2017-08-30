@@ -8,7 +8,7 @@ public abstract class GameController : MonoBehaviour {
     public Transform playerPrefab;
 	public Transform explosionPrefab;
 
-	protected const string SERVER_HOST = "127.0.0.1";// "181.26.170.150";//"192.168.0.18";
+	protected const string SERVER_HOST = "192.168.0.18";// "127.0.0.1";// "181.26.170.150";
     protected const int PORT = 5500;
 
 	protected ReliableChannel _channel;

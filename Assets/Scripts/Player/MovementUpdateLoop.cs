@@ -22,4 +22,7 @@ public class MovementUpdateLoop : UpdateLoop {
 		_targetPosition = position;
 	}
 
+	public virtual void CancelMovement() {
+		_targetPosition = _player.transform.position;
+	}
 }
