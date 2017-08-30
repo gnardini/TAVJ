@@ -18,7 +18,7 @@ public class AbilityInput : PlayerInput {
     }
 
 	public static AbilityInput FromBytes(int id, BitBuffer bitBuffer) {
-		return new AbilityInput(id, (AbilityType)bitBuffer.GetByte(), PositionInfo.fromBytes(bitBuffer));
+		return new AbilityInput(id, (AbilityType)bitBuffer.GetByte(), PositionInfo.FromBytes(bitBuffer));
     }
 
     public Vector3 GetTargetPosition() {

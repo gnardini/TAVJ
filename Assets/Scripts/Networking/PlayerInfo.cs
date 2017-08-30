@@ -31,7 +31,7 @@ public class PlayerInfo : Byteable {
 	public static PlayerInfo FromBytes(BitBuffer bitBuffer){
 		int id = bitBuffer.GetByte();
 		int health = bitBuffer.GetByte();
-		PositionInfo positionInfo = PositionInfo.fromBytes (bitBuffer);
+		PositionInfo positionInfo = PositionInfo.FromBytes (bitBuffer);
 		return new PlayerInfo (id, health, positionInfo);
 	}
 

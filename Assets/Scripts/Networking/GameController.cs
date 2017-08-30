@@ -6,8 +6,9 @@ using UnityEngine;
 public abstract class GameController : MonoBehaviour {
 
     public Transform playerPrefab;
+	public Transform explosionPrefab;
 
-	protected const string SERVER_HOST = "181.26.170.150";//"192.168.0.18";
+	protected const string SERVER_HOST = "127.0.0.1";// "181.26.170.150";//"192.168.0.18";
     protected const int PORT = 5500;
 
 	protected ReliableChannel _channel;
@@ -61,6 +62,17 @@ public abstract class GameController : MonoBehaviour {
 		player.SetId(playerInfo.GetId());
 		player.SetHealth(playerInfo.GetHealth());
 		return player;
+	}
+
+	protected AutoAttack SpawnAutoAttack(int id, Vector3 startPosition, Vector3 targetPosition) {
+		AutoAttack autoAttack = _players[id].SpawnAutoAttack(startPosition, targetPosition);
+		autoAttack.SetGameController(this);
+		return autoAttack;
+	}
+
+	protected void CreateExplosion(Vector3 position) {
+		position.y = explosionPrefab.position.y;
+		Instantiate(explosionPrefab, position, Quaternion.identity);
 	}
 
 	protected void RemoveDeadAutoAttacks() {

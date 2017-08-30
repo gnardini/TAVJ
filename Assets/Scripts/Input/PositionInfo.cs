@@ -14,7 +14,7 @@ public class PositionInfo : Byteable {
         return _position;
     }
 
-	public static PositionInfo fromBytes(BitBuffer bitBuffer) {
+	public static PositionInfo FromBytes(BitBuffer bitBuffer) {
 		float x = bitBuffer.GetFloat ();
 		float y = bitBuffer.GetFloat ();
 		float z = bitBuffer.GetFloat ();

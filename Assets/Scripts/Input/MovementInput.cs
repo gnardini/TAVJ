@@ -15,7 +15,7 @@ public class MovementInput : PlayerInput {
     }
 
 	public static MovementInput FromBytes(int id, BitBuffer bitBuffer) {
-		return new MovementInput(id, PositionInfo.fromBytes(bitBuffer));
+		return new MovementInput(id, PositionInfo.FromBytes(bitBuffer));
     }
 
     public Vector3 GetPosition() {

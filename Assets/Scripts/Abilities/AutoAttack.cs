@@ -8,6 +8,7 @@ public class AutoAttack : MonoBehaviour {
     public int range;
 	public int damage;
 
+	private GameController _gameController;
     private Rigidbody _rigidbody;
     private Vector3 _targetPosition;
     private Vector3 _nextPosition;
@@ -33,6 +34,14 @@ public class AutoAttack : MonoBehaviour {
 		_ownerId = id;
 	}
 
+	public int GetOwnerId() {
+		return _ownerId;
+	}
+
+	public void SetGameController(GameController gameController) {
+		_gameController = gameController;
+	}
+
     // This is called in the clients with the position received from the server.
     public void MoveTo(Vector3 position) {
         _nextPosition = position;
@@ -47,6 +56,14 @@ public class AutoAttack : MonoBehaviour {
 			} else {
 				return;
 			}
+		}
+		AutoAttack autoAttack = collisionObject.GetComponent<AutoAttack>();
+		// The reason for the second condition is so that only one of the autoattacks
+		if (autoAttack != null && _ownerId < autoAttack.GetOwnerId()) {
+			float xPosition = (transform.position.x + autoAttack.transform.position.x) / 2;
+			float zPosition = (transform.position.z + autoAttack.transform.position.z) / 2;
+			Vector3 position = new Vector3(xPosition, 1f, zPosition);
+			_gameController.SendBroadcast(new AbilityInput(0, AbilityType.EXPLOSION, position), true);
 		}
 		Destroy(gameObject);
 	}

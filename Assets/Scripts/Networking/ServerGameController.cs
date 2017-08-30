@@ -11,7 +11,7 @@ public class ServerGameController : GameController {
 	override protected void Update () {
 		base.Update();
 		BitBuffer bitBuffer = new BitBuffer();
-		int totalUpdates = _players.Count + _autoAttacks.Count;
+		int totalUpdates = _players.Count;
 		bitBuffer.PutByte((byte)totalUpdates);
 		foreach(KeyValuePair<int, Player> playerInfoPair in _players) {
 			Vector3 position = playerInfoPair.Value.transform.position;
@@ -21,12 +21,6 @@ public class ServerGameController : GameController {
 				new PositionInfo(position));
 			new PlayerInfoUpdate(playerInfo).PutBytes(bitBuffer);
 		}
-//		foreach(KeyValuePair<int, AutoAttack> autoInfo in _autoAttacks) {
-//			// TODO FIX
-//			Vector3 position = autoInfo.Value.transform.position;
-//			PlayerInfo playerInfo = new PlayerInfo(autoInfo.Key, 0, new PositionInfo(position));
-//			new PlayerInfoUpdate(playerInfo).PutBytes(bitBuffer);
-//		}
 		bitBuffer.Flip ();
 		_channel.SendAll(new ResponsesContainer(bitBuffer.GetByteArray()), false);
 	}
@@ -42,17 +36,25 @@ public class ServerGameController : GameController {
 			break;
 		case InputType.ABILITY:
 			AbilityInput ability = (AbilityInput)input;
+			Vector3 abilityStartPosition = Vector3.zero;
 			switch (ability.GetAbilityType()) {
 			case AbilityType.AUTOATTACK:
-				AutoAttack autoAttack = _players[ability.GetId()].SpawnAutoAttack(ability.GetTargetPosition());
+				abilityStartPosition = _players[ability.GetId()].transform.position;
+				AutoAttack autoAttack = SpawnAutoAttack(ability.GetId(), abilityStartPosition, ability.GetTargetPosition());
 				_lastAbilityId = (_lastAbilityId + 1) % 255;
 				_autoAttacks.Add(_lastAbilityId, autoAttack);
 				break;
 			case AbilityType.FREEZE:
 				_players[ability.GetId()].SpawnFreeze(ability.GetTargetPosition());
 				break;
+			case AbilityType.FLASH:
+				_players[ability.GetId()].MoveTo(ability.GetTargetPosition());
+				break;
+			case AbilityType.EXPLOSION:
+				CreateExplosion(ability.GetTargetPosition());
+				break;
 			}
-			_channel.SendAll(new AbilityResponse(ability), true);
+			_channel.SendAll(new AbilityResponse(ability, abilityStartPosition), true);
 			break;
 		case InputType.START_GAME:
 			_lastPlayerId++;

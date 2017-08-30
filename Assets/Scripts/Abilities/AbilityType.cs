@@ -5,6 +5,8 @@ using UnityEngine;
 public enum AbilityType : byte {
 
 	AUTOATTACK,
-	FREEZE
+	FREEZE,
+	FLASH,
+	EXPLOSION
 
 }

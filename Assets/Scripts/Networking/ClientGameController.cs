@@ -29,11 +29,9 @@ public class ClientGameController : GameController {
 		case ResponseType.PLAYER_UPDATE: {
 				PlayerInfoUpdate playerUpdate = (PlayerInfoUpdate)response;
 				PlayerInfo playerInfo = playerUpdate.GetPlayerInfo();
-				if(_players.ContainsKey(playerInfo.GetId ())){
+				if(_players.ContainsKey(playerInfo.GetId ())) {
 					_players [playerInfo.GetId ()].SetTargetPosition(playerInfo.GetPosition ());
 					_players [playerInfo.GetId ()].SetHealth(playerInfo.GetHealth ());
-				} else if (_autoAttacks.ContainsKey(playerInfo.GetId())) {
-					_autoAttacks[playerInfo.GetId()].MoveTo(playerInfo.GetPosition());
 				}
 				break;
 			}
@@ -41,10 +39,16 @@ public class ClientGameController : GameController {
 				AbilityResponse auto = (AbilityResponse)response;
 				switch(auto.GetAbilityType()) {
 				case AbilityType.AUTOATTACK:
-					_players [auto.GetId ()].SpawnAutoAttack(auto.GetPosition ());
+					SpawnAutoAttack(auto.GetId(), auto.GetStartPosition(), auto.GetPosition());
 					break;
 				case AbilityType.FREEZE:
 					_players[auto.GetId()].SpawnFreeze(auto.GetPosition());
+					break;
+				case AbilityType.FLASH:
+					_players[auto.GetId()].MoveTo(auto.GetPosition());
+					break;
+				case AbilityType.EXPLOSION:
+					CreateExplosion(auto.GetPosition());
 					break;
 				}
 				break;

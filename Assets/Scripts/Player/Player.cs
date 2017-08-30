@@ -11,6 +11,8 @@ public class Player : MonoBehaviour {
 	public Transform freezePrefab;
     public float moveSpeed;
     public float autoAttackCooldown;
+	public float freezeCooldown;
+	public float flashCooldown;
     public int maxHealth;
 
 	protected GameObject _targetPositionSign;
@@ -89,16 +91,17 @@ public class Player : MonoBehaviour {
 		}
 	}
 
-    public AutoAttack SpawnAutoAttack(Vector3 targetPosition) {
+    public AutoAttack SpawnAutoAttack(Vector3 startPosition, Vector3 targetPosition) {
         Vector3 relativePosition = targetPosition - transform.position;
         Quaternion rotation = Quaternion.LookRotation(relativePosition);
-        Vector3 startPosition = transform.position + 0.8f * relativePosition.normalized;
+		startPosition = startPosition + 0.8f * relativePosition.normalized;
 		AutoAttack auto = Instantiate(autoAttackPrefab, startPosition, rotation).GetComponent<AutoAttack>();
 		auto.SetOwnerId(_id);
 		return auto;
     }
 
 	public Freeze SpawnFreeze(Vector3 targetPosition) {
+		targetPosition.y = freezePrefab.position.y;
 		Freeze freeze = Instantiate(freezePrefab, targetPosition, Quaternion.identity).GetComponent<Freeze>();
 		freeze.SetOwnerId(_id);
 		return freeze;	

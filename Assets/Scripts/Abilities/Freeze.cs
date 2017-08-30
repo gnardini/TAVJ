@@ -33,10 +33,10 @@ public class Freeze : MonoBehaviour {
 		GameObject collisionObject = collider.gameObject;
 		Player player = collisionObject.GetComponent<Player>();
 		if (player != null) {
-//			if (player.GetId() != _ownerId) {
+			if (player.GetId() != _ownerId) {
 				player.SetSpeedMultiplier(speedMultiplier);
 				_slowedPlayers.Add(player);
-//			}
+			}
 		}
 	}
 
@@ -44,10 +44,10 @@ public class Freeze : MonoBehaviour {
 		GameObject collisionObject = collider.gameObject;
 		Player player = collisionObject.GetComponent<Player>();
 		if (player != null) {
-//			if (player.GetId() != _ownerId) {
+			if (player.GetId() != _ownerId) {
 				player.SetSpeedMultiplier(1f);
 				_slowedPlayers.Remove(player);
-//			}
+			}
 		}
 	}
 }
