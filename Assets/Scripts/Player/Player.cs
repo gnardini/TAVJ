@@ -77,9 +77,9 @@ public class Player : MonoBehaviour {
 	}
 
     void FixPosition() {
-        transform.position = new Vector3(transform.position.x, 1.2f, transform.position.z);
+//        transform.position = new Vector3(transform.position.x, 1.2f, transform.position.z);
+		//        _rigidBody.velocity = Vector3.zero;
         transform.rotation = Quaternion.identity;
-        _rigidBody.velocity = Vector3.zero;
         _rigidBody.angularVelocity = Vector3.zero;
     }
 
@@ -105,11 +105,13 @@ public class Player : MonoBehaviour {
 		_healthLeft = health;
 	}
 
-	public void DoDamage(int damage) {
+	public void DoDamage(int damage, Vector3 direction) {
 		_healthLeft -= damage;
 		if (_healthLeft < 0) {
 			_healthLeft = 0;
 		}
+		int missingHealth = maxHealth - _healthLeft;
+		_rigidBody.AddForce(direction * missingHealth / 4);
 	}
 
     public AutoAttack SpawnAutoAttack(Vector3 startPosition, Vector3 targetPosition) {

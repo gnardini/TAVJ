@@ -26,7 +26,8 @@ public class Explosion : MonoBehaviour {
 		Player player = collisionObject.GetComponent<Player>();
 		if (player != null && !_affectedPlayers.Contains(player)) {
 			_affectedPlayers.Add(player);
-			player.DoDamage(damage);
+			// TODO: Fix the direction
+			player.DoDamage(damage, Vector3.zero);
 		}
 	}
 

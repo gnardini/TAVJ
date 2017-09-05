@@ -52,7 +52,7 @@ public class AutoAttack : MonoBehaviour {
 		Player player = collisionObject.GetComponent<Player>();
 		if (player != null) {
 			if (player.GetId() != _ownerId) {
-				player.DoDamage(damage);
+				player.DoDamage(damage, (_nextPosition - transform.position).normalized);
 			} else {
 				return;
 			}
